@@ -21,4 +21,7 @@
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Study.md" />
+  </ItemGroup>
 </Project>

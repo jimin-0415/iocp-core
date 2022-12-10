@@ -1,13 +1,13 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN             // °ÅÀÇ »ç¿ëµÇÁö ¾Ê´Â ³»¿ëÀ» Windows Çì´õ¿¡¼­ Á¦¿ÜÇÕ´Ï´Ù.
+#define WIN32_LEAN_AND_MEAN             // ê±°ì˜ ì‚¬ìš©ë˜ì§€ ì•ŠëŠ” ë‚´ìš©ì„ Windows í—¤ë”ì—ì„œ ì œì™¸í•©ë‹ˆë‹¤.
 
-//Linker ³ÖÁö ¾Ê°í pch¿¡ ¼±¾ö
+//Linker ë„£ì§€ ì•Šê³  pchì— ì„ ì—„
 #ifdef _DEBUG
 #pragma comment(lib, "Debug\\ServerCore.lib")
 #else 
 #pragma comment(lib, "Release\\ServerCore.lib")
 #endif
 
-//library ¿¡¼­ Ãß°¡
+//library ì—ì„œ ì¶”ê°€
 #include "CorePch.h"
