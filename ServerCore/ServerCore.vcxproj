@@ -27,6 +27,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CoreTLS.cpp" />
+    <ClCompile Include="DeadLockProfiler.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="ThreadManager.cpp" />
@@ -36,6 +37,7 @@
     <ClInclude Include="CoreMacro.h" />
     <ClInclude Include="CorePch.h" />
     <ClInclude Include="CoreTLS.h" />
+    <ClInclude Include="DeadLockProfiler.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ThreadManager.h" />
