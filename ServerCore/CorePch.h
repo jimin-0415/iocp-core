@@ -1,11 +1,16 @@
 #pragma once
 
 /// <summary>
-/// PCH ÆÄÀÏÀº GameServer, DummyClient ¿¡¼­ ÂüÁ¶ ºÒ°¡´ÉÇÑ ÆÄÀÏ ÀÌ±â¶§¹®¿¡ ÇØ´ç ÆÄÀÏÀ» ÂüÁ¶ÇÏ±â À§ÇØ¼­
-/// ÄÚ¾î ÆÄÀÏÀ» »ı¼º  
+/// PCH íŒŒì¼ì€ GameServer, DummyClient ì—ì„œ ì°¸ì¡° ë¶ˆê°€ëŠ¥í•œ íŒŒì¼ ì´ê¸°ë•Œë¬¸ì— í•´ë‹¹ íŒŒì¼ì„ ì°¸ì¡°í•˜ê¸° ìœ„í•´ì„œ
+/// ì½”ì–´ íŒŒì¼ì„ ìƒì„±  
 /// </summary>
 
 #include "Types.h"
+
+#include "CoreGlobal.h"
+#include "CoreTLS.h"
+#include "CoreMacro.h"
+
 #include <vector>
 #include <list>
 #include <stack>
