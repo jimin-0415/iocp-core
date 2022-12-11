@@ -4,13 +4,17 @@
 
 ThreadManager* GThreadManager;
 
-CoreGlobal::CoreGlobal()
+// Core Global 을 cpp안에 정의해서 전역 객체로 사용한다.
+class CoreGlobal	
 {
-	GThreadManager = new ThreadManager();
-	
-}
+public:
+	CoreGlobal()
+	{
+		GThreadManager = new ThreadManager();
+	}
 
-CoreGlobal::~CoreGlobal()
-{
-	delete GThreadManager;
-}
+	~CoreGlobal()
+	{
+		delete GThreadManager;
+	}
+} GCoreGlobal;
