@@ -11,15 +11,22 @@
 
 #include "RefCounting.h"
 #include "Memory.h"
-#include "LockFreeStack.h"
 
-SListHeader* GHeader;
+DECLSPEC_ALIGN(16)
+class Data 
+{
+public:
+	SLIST_ENTRY _entry;
+	int64 _rand = rand() % 1000;
+};
+
+SLIST_HEADER* GHeader;
 
 int main()
 {
-	GHeader = new SListHeader();
+	GHeader = new SLIST_HEADER();
 	ASSERT_CRASH(((uint64)GHeader % 16) == 0);	//메모리 16byte 정렬 여부 확인
-	InitializeHeader(GHeader);
+	::InitializeSListHead(GHeader);
 
 	for (int32 i = 0; i < 5; ++i) {
 		GThreadManager->Launch([](){
@@ -27,7 +34,8 @@ int main()
 				Data* data = new Data();
 				ASSERT_CRASH(((uint64)data % 16) == 0);
 
-				PushEntryList(GHeader, (SListEntry*)data);
+				InterlockedPushEntrySList(GHeader, (SLIST_ENTRY*)data);
+				//InterlockedPushEntrySList(GHeader, (PSLIST_ENTRY)data);
 				this_thread::sleep_for(10ms);
 			}
 			});
@@ -37,7 +45,7 @@ int main()
 		GThreadManager->Launch([]() {
 			while (true) {
 				Data* pop = nullptr;
-				pop = (Data*)PopEntryList(GHeader);
+				pop = (Data*)InterlockedPopEntrySList(GHeader);
 
 				if (pop) {
 					cout << pop->_rand << endl;
