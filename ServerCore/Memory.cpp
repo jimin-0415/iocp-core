@@ -52,7 +52,7 @@ void* Memory::Allocate(int32 size)
 	const int32 allocSize = size + sizeof(MemoryHeader); //[header][data] 64byte를 할당할 경우 128byte 크기 메모리 풀에 할당.
 	
 	if (allocSize > MAX_ALLOC_SIZE) {
-		header = reinterpret_cast<MemoryHeader*>(::malloc(allocSize));
+		header = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(allocSize, SLIST_ALIGNMENT));
 	}
 	else {
 		//Pool에서 꺼내온다.
@@ -69,7 +69,7 @@ void Memory::Release(void* ptr)
 	const int32 allocSize = header->allocSize;
 	
 	if (allocSize > MAX_ALLOC_SIZE) {
-		::free(ptr);
+		::_aligned_free(ptr);
 	}
 	else {
 		//메모리 풀에 반납
