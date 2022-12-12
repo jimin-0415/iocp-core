@@ -44,27 +44,17 @@ public:
 
 int main()
 {
-	Knight* test = new Knight; //먼가 내부에서 재사용성 효율을 높이는거 같다.
-	test->_hp = 100;
-	delete test;
-	test->_hp = 200;
-
-	Knight* knight = xnew<Knight>(100);
-	xdelete(knight);
+	Vector<Knight> v(100);
 	
-	//delete 후 잘못된 메모리 접근 잡아줌.
-	knight->_mp =  1000;
+	int count = 0;
+	while (true) {
+		++count;
+		int index = count % 99;
+		cout << v[index]._hp << endl;
+	}
 
-	//현재 문제점 메모리 오버플로우 문제는 못잡음
-	//[[  할당 크기] [넘어간크기]             ] <- 문제되는 부분 메모리 오버플로우 발생
-	Knight* knight2 = (Knight*)xnew<Player>();
-	knight2->_hp = 200; //해당 구문은 현재 정상적으로 돌아갑니다. <- 이렇게 하면 잡힘
+	int a = 20;
 
-	//해결방법 
-	//	메모리를 끝으로 보내버린다.
-	//[         4kb        [ 할당 공간 ]]
-	// 이유 -> 대부분 메모리 오버플로우가 문제가 되기 때문에
-	//메모리 언더 플로우는 거의 발생하지 않는다.
 	return 0;
 }
 

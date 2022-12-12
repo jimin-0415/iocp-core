@@ -465,4 +465,13 @@ SYSTEM_INFO info;	//system 정보를 가져온다.
 	//VirtualAlloc, Free 를 사용할 경우 운영체제 커널단에 메모리 예약과 해제를 하기 떄문에, 만약 해제된 메모리에 접근할 경우 Crash가 발생함.
 	//하지만 C++ 에서 제공해주는 new , delete 예약어를 사용할 경우 CheckCrash 까지 발생하지 않음을 유추할 수 있음. 
 	
-	
+
+
+
+## STLAllocator 
+-> STL의 경우 기본 new , delete 를 통해서 메모리 할당을 하게 된다.
+-> 이럴 경우 우리가 만든 Allocator 를 사용하지 못한다.
+-> 이럴때 STLAllocator 를 할당해서 사용할 수 있도록 한다.
+STL Allocator 를 사용할 경우 기본 Allocator 가아닌 내가 직접 커스마이징한 Allocatpr 를 사용할 수 있다.
+메모리 할당, 해제 정책을 사용할 수 있다.
+Allocator가 있다고 기본 new , delete 를 사용하지 못하는것은 아니다. 다만 내가 직접 해당 메모리 관리를 할 수 없다는 단점만 있을 뿐이다.
