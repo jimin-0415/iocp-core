@@ -31,7 +31,7 @@ public:
 	}
 
 protected:
-	int32 _refCount;
+	atomic<int32> _refCount;
 };
 
 template<typename T>
@@ -79,33 +79,23 @@ public:
 		return *this;
 	}
 	
-	bool operator==(const TSharedPtr& rhs) const { return _ptr = rhs._ptr; }
-	bool operator!=(const TSharedPtr& rhs) const { return _ptr != rhs._ptr; }
-	bool operator < (const TSharedPtr& rhs) const { return _ptr < ptr; }
+	bool		operator==(const TSharedPtr& rhs) const { return _ptr == rhs._ptr; }
+	bool		operator!=(const TSharedPtr& rhs) const { return _ptr != rhs._ptr; }
+	bool		operator < (const TSharedPtr& rhs) const { return _ptr < rhs.ptr; }
 	
-	bool operator==(T* ptr) const { return _ptr = ptr; }
-	bool operator != (T* ptr) const { return _ptr != ptr; }
-	bool operator < (T* ptr) const { return _ptr < ptr; }
+	bool		operator==(T* ptr) const { return _ptr == ptr; }
+	bool		operator != (T* ptr) const { return _ptr != ptr; }
+	bool		operator < (T* ptr) const { return _ptr < ptr; }
 
-	T* operator*() {
-		return _ptr;
-	}
+	T*			operator*() { return _ptr; }
+	const T*	operator*() const { return _ptr; }
 
-	const T* operator*() const {
-		return _ptr;
-	}
+	T*			operator->() { return _ptr; }
+	const T*	operator->() const { return _ptr; }
 
-	operator T* () const {
-		return _ptr;
-	}
+	operator T* () const { return _ptr; }
 
-	T* operator->() () {
-		return _ptr;
-	}
-	const T* operator->() const {
-		return _ptr;
-	}
-
+	bool IsNull() { return _ptr = nullptr; }
 	
 private:
 	inline void Set(T* ptr) {
