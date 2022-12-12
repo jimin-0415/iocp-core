@@ -34,6 +34,18 @@ public:
 };
 
 /// <summary>
+/// PoolAllocator
+/// </summary>
+class PoolAllocator
+{
+	enum { PAGE_SIZE = 0x1000 };	//4kb
+public:
+	static void* Alloc(int32 size);
+	static void Release(void* ptr);
+};
+
+
+/// <summary>
 /// visual studio 버전에 따라서 STLAllocator 가 요구하는 사항이 다름
 /// 지금은 점점 적음
 /// </summary>

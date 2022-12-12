@@ -44,16 +44,24 @@ public:
 
 int main()
 {
-	Vector<Knight> v(100);
-	
-	int count = 0;
-	while (true) {
-		++count;
-		int index = count % 99;
-		cout << v[index]._hp << endl;
+	for (int32 i = 0; i < 5; i++) {
+		GThreadManager->Launch([]() {
+			while (true) {
+				Vector<Knight> v(100);
+
+				int count = 0;
+				while (true) {
+					++count;
+					int index = count % 99;
+					cout << v[index]._hp << endl;
+				}
+
+				this_thread::sleep_for(10ms);
+			}
+		});
 	}
 
-	int a = 20;
+	GThreadManager->Join();
 
 	return 0;
 }
