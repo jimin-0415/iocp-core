@@ -501,3 +501,217 @@ Allocator가 있다고 기본 new , delete 를 사용하지 못하는것은 아�
 	-> 4096 크기 4kbyte를 넘어가면 기본 malloc으로 할당한다.
 	-> 이하일 경우 해당 PoolSize에 맞는 메모리를 할당 받는다.
 
+
+
+MemoryPool 아쉬운점
+1. 메모리풀에서 Pop(), Push()할경우 WriteLock을 통해서 Thread가 경합을 해야한다는점.
+2. 내부적 방식이 동적 배열로 되어있다.
+
+
+##LockFreeStack
+### 1. SingleTread LockFreeStack
+/// <summary>
+/// //SingleThread LockFreeStack
+/// </summary>
+
+struct SListEntry 
+{
+	SListEntry* next;
+};
+
+class Data // : public SListEntry
+{
+
+public:
+	SListEntry _entry;
+
+	int data1;
+	int data2;
+};
+
+struct SListHeader 
+{
+	SListEntry* next = nullptr;
+};
+
+
+void InitializeHeader(SListHeader* header);
+void PushEntryList(SListHeader* header, SListEntry* entry);
+SListEntry* PopEntryList(SListHeader* header);
+
+void InitializeHeader(SListHeader* header) {
+	header->next = nullptr;
+}
+
+//header [ nullptr <-entry ] 
+void PushEntryList(SListHeader* header, SListEntry* entry) {
+	entry->next = header->next;
+	header->next = entry;
+}
+
+SListEntry* PopEntryList(SListHeader* header) {
+	SListEntry* first = header->next;
+
+	if (first != nullptr) {
+		header->next = first->next;
+	}
+	return first;
+}
+
+###2. MultiThread Lock Free Stack
+
+///MultiThread LockFreeStack
+///문제 1. 꺼내온 녀석의 메모리가 이미 제거되어 Crash 발생 가능성이 있다.
+/// -> node를 직접 관리하지 않기 때문에.
+/// 2. ABA 프로블럼이 발생할 수 있다.
+/// 
+void InitializeHeader(SListHeader* header) {
+	header->next = nullptr;
+}
+
+//header [ nullptr <-entry ] 
+void PushEntryList(SListHeader* header, SListEntry* entry) {
+	entry->next = header->next;
+	//entry, entry->next 비교
+	while (::InterlockedCompareExchange64((int64*)&header->next, (int64) entry, (int64)entry->next) == 0) {
+															//header->next = entry;
+	}
+
+}
+
+
+//1. 이렇게만 꺼내오게되면 꺼내온 녀석이 어디선가 delete가 되면 Crash 가 발생할 수 있다.
+//->그렇기 때문에 해당 Node에 refCount를 주어서 소멸되지 않게 해야한다.
+//2. ABA Problem 현상이 발생 할 수 있다. -> 메모리 주소 하나만을 가지고 비교할경우 interlocked 써도 해당 문제는 발생함
+// 만약 Header가 5000이라면, Header에다가 6000을 넣는다.
+//-> [5000] -> [6000] -> [7000]
+//	 [Header]
+// 만약 Header가 5000이라면, Header에다가 6000을 넣는다. 이코드 실행할려는 찰나 다른 쓰레드에서 Pop, Pop해서 두개다 가져가면
+// 가져갔다가 공고롭게 같은 메모리 주소를 다시 인서트 하게된면?
+//-> [5000] -> [7000] 이상태가 되었을때. -> 5000꺼내고 -> 6000을 넣어벌니다. 
+//-> 기대값 [header 7000] -> 결과값 [header 6000]
+
+SListEntry* PopEntryList(SListHeader* header) {
+	SListEntry* expected = header->next;
+
+	while (expected
+		&& ::InterlockedCompareExchange64((int64*)&header->next, (int64)expected->next, (int64)expected) == 0) {
+		/*if (first != nullptr) {
+			header->next = first->next;
+		}*/
+
+	}
+	return expected;
+}
+
+###3. ABA 해결 Lock Free Stack
+#include "pch.h"
+#include "LockFreeStack.h"
+
+#pragma once
+
+/// <summary>
+/// //SingleThread LockFreeStack
+/// </summary>
+
+//16byte로 정렬
+DECLSPEC_ALIGN(16)
+struct SListEntry 
+{
+	SListEntry* next;
+};
+
+DECLSPEC_ALIGN(16)
+class Data // : public SListEntry
+{
+
+public:
+	SListEntry _entry;
+	int64 _rand = rand() % 1000;
+};
+
+DECLSPEC_ALIGN(16)
+struct SListHeader 
+{
+	SListHeader() {
+		alignment = 0;
+		region = 0;
+	}
+	union 
+	{
+		struct
+		{
+			uint64 alignment;
+			uint64 region;
+		} DUMMYSTRUCTNAME;
+
+		struct
+		{
+			uint64 depth : 16;		//data 가 들어간 개수에 따라 1씩 증가
+			uint64 sequence : 48;	//
+			uint64 reserved : 4;
+			uint64 next : 60;
+		} HeaderX64;
+	};
+};
+
+
+void InitializeHeader(SListHeader* header);
+void PushEntryList(SListHeader* header, SListEntry* entry);
+SListEntry* PopEntryList(SListHeader* header);
+
+
+void InitializeHeader(SListHeader* header) {
+	header->alignment = 0;
+	header->region = 0;
+}
+
+
+void PushEntryList(SListHeader* header, SListEntry* entry) {
+	SListHeader expected = {};	//예상
+	SListHeader desired = {};	//원하는
+	
+	//16byte 정렬은 하위 4bit는 0000이다. 
+	desired.HeaderX64.next = (((uint64)entry) >> 4); //60bit에 저장, 16bit로 정렬되었기 때문에 쉬프트연산으로 4비트 땡김.
+														//-> 땡기는 이유 앞 4bit 공간을 다른 목적으로 사용 가능
+	while (true) {
+		expected = *header;
+
+		//이 사이에 변경 가능하다. <- 다른쓰레드가
+		entry->next = (SListEntry*)(((uint64)expected.HeaderX64.next) << 4); //header 복원
+		desired.HeaderX64.depth = expected.HeaderX64.depth + 1;		 
+		desired.HeaderX64.sequence = expected.HeaderX64.sequence + 1; 
+
+		if (::InterlockedCompareExchange128((int64*)header, desired.region, desired.alignment, (int64*)&expected) == 1)
+			break;
+	}
+}
+
+SListEntry* PopEntryList(SListHeader* header) {
+	SListHeader expected = {};	//예상
+	SListHeader desired = {};	//원하는
+	SListEntry* entry = nullptr;
+	
+	while (true) {
+		expected = *header;
+
+		entry = (SListEntry*)(((uint64)expected.HeaderX64.next) << 4);
+		if (entry == nullptr)
+			break;
+
+		//Use-After-Free 문제는 여전히 존재.
+		desired.HeaderX64.next = ((uint64)entry->next) >> 4;
+		desired.HeaderX64.depth = expected.HeaderX64.depth - 1;
+		desired.HeaderX64.sequence = expected.HeaderX64.sequence + 1;
+
+		if (::InterlockedCompareExchange128((int64*)header, desired.region, desired.alignment, (int64*)&expected) == 1)
+			break;
+	}
+	return entry;
+}
+
+//해당 코드 ABA 문제점은 해결되었다.
+//하지만 Use-After-Free문제는 여전히 존재합니다.
+//LockFreeStack은 만들어 쓰는것보다 MS에서 제공해주는것 사용하기.
+//MS에서도 16byte 정렬을 맞추라고 하는데, 이 구현 방법처럼 작동하기 때문이다.
+//하위 4bit는 0000으로 확신이 가능하기 때문에.
