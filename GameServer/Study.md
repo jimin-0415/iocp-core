@@ -149,3 +149,48 @@ DeadLock발생 전에 해당 이슈를 방어하는게 좋다.
 	- 역방향 간선
 	- 교차 간선
 - BFS 넓이 우선 탐색
+
+
+
+##레퍼런스 카운팅
+레퍼런스 카운팅에 개념, 다른 누군가가 해당 객체를 참조하게 되면 Ref Count를 증가시켜준다.
+만약 참조를 하지 않는 상태가 된다면 RefCount를 감소 시켜준다.
+->객체 초기 생성 시 RefCount = 1
+->RefCount == 0 이 될 경우 객체를 소멸시킨다.
+
+레퍼런스 카운팅은 하나의 쓰레드 환경에서는 문제없이 동작한다.
+하지만 멀티 쓰레드 환경에서는 문제가 된다.
+
+1. AddRef를 수동으로 관리하기 때문에 문제가 발생한다. [프로그래머의 부주의.] <- 수동으로 ref를 각가 객체에서 증가시켜주는 방식.
+2. ref++ 코드 자체가 atommic하게 동작하지 않는다. <- atomic<> 으로 변수 바꾸면 문제 해결.
+3. 실행 흐름 중간에 누군가 끼어들 수 있다. -> 멀티 쓰레드 환경에서 문제.
+3-1. 예시 구문
+```
+class Missile : public RefCountable
+{
+public:
+	void SetTarget(Wraight* target) {
+		_target = target;
+					<-------------------------------- 사용 할려고 했는데, 다른쓰레드에서 이미 Ref를 감소시켜서 날라가버리는 상태가 발생 할 수 있다.
+		target->AddRef();
+	}
+
+	void Update() {
+
+		if (_target == nullptr)
+			return;
+
+		int pox = _target->_posX;
+		int poy = _target->_posY;
+
+		if (_target->_hp == 0) {
+			_target->ReleaseRef();
+			_target = nullptr;
+		}
+
+		//쫓아 가간다.
+	}
+
+	Wraight* _target = nullptr;
+};
+```
