@@ -494,3 +494,10 @@ Allocator가 있다고 기본 new , delete 를 사용하지 못하는것은 아�
 
 //[Memory Header][Data]
 //실제 메모리를 보면 Write객체 할당할때 여러 정보를 같이 넣어준다.
+
+//MemoryPool : 동일 크기의 메모리 풀
+-> Pool에 해당 메모리 Chunk가 있으면 가져온다.
+-> Pool에 메모라가 없으면 새로 할당한다 
+	-> 4096 크기 4kbyte를 넘어가면 기본 malloc으로 할당한다.
+	-> 이하일 경우 해당 PoolSize에 맞는 메모리를 할당 받는다.
+
