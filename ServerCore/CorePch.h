@@ -21,8 +21,9 @@
 #include <queue>
 
 #include <Windows.h>
+#include <memory>
 #include <iostream>
-
+#include <utility>
 using namespace std;
 
 #include "Lock.h"
