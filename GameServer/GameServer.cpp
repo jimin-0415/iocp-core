@@ -11,58 +11,44 @@
 
 #include "RefCounting.h"
 #include "Memory.h"
+#include "LockFreeStack.h"
 
-class Player {
-public:
-	Player() {
-
-	}
-};
-
-class Knight : public Player
-{
-public:
-	Knight() {
-		cout << "khight()" << endl;
-	}
-
-	~Knight() {
-		cout << "~ khight()" << endl;
-	}
-	
-	Knight(int32 hp)
-		:_hp(hp)
-	{
-		cout << "Knight() hq " << endl;
-	}
-
-public:
-
-	int32 _hp = 100;
-	int32 _mp = 2000;
-};
+SListHeader* GHeader;
 
 int main()
 {
-	for (int32 i = 0; i < 5; i++) {
+	GHeader = new SListHeader();
+	ASSERT_CRASH(((uint64)GHeader % 16) == 0);	//메모리 16byte 정렬 여부 확인
+	InitializeHeader(GHeader);
+
+	for (int32 i = 0; i < 5; ++i) {
+		GThreadManager->Launch([](){
+			while (true) {
+				Data* data = new Data();
+				ASSERT_CRASH(((uint64)data % 16) == 0);
+
+				PushEntryList(GHeader, (SListEntry*)data);
+				this_thread::sleep_for(10ms);
+			}
+			});
+	}
+
+	for (int32 i = 0; i < 2; i++) {
 		GThreadManager->Launch([]() {
 			while (true) {
-				Vector<Knight> v(100);
+				Data* pop = nullptr;
+				pop = (Data*)PopEntryList(GHeader);
 
-				int count = 0;
-				while (true) {
-					++count;
-					int index = count % 99;
-					cout << v[index]._hp << endl;
+				if (pop) {
+					cout << pop->_rand << endl;
+					delete pop;
 				}
-
-				this_thread::sleep_for(10ms);
+				else {
+					cout << "NONE" << endl;
+				}
 			}
 		});
 	}
-
-	GThreadManager->Join();
-
 	return 0;
 }
 
