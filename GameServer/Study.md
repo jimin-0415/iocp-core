@@ -338,3 +338,78 @@ int main()
 	return 0;
 }
 
+
+
+##메모리 관리
+
+C# 은 메모리 관리 다 해줌
+C++은 메모리를 커스터마이징이 가능하다.
+메모리 동적 할당 해제를 직접 할 수 있다.
+
+오브젝트, 메모리 풀링으로 한다.
+
+커널쪽에 메모리를 관리하긴하지만 그래도 context switching이 이루어 질 수 있다.
+
+1. 메모리를 큰 메모리 영역으로 할당을 해서 쪼개면, 굳이 운영체제 커널에 메모리 할당을 요청할 필요없다.
+2. 주기적으로 메모리 할당 해제를 하다보면, 메모리 파편화 문제가 생길 수 있습니다.
+요즘은 마소에서 잘 해놔서 굳이 풀링으로 할 필요도 없을거라고 함. 하지만 ..그래도 필요.
+
+//new operator overloading (Global)
+void* operator new(size_t size) {
+	cout << "new ! " << size << endl;
+	void* ptr = ::malloc(size);
+	return ptr;
+}
+
+void operator delete(void* ptr) {
+	cout << "delete ! " << endl;
+	::free(ptr);
+}
+
+void* operator new[](size_t size) {
+	cout << "new []" << size << endl;
+	void* ptr = ::malloc(size);
+	return ptr;
+}
+
+
+void operator delete[](void* ptr) {
+	cout << "delete []" << endl;
+	::free(ptr);
+}
+
+모든 애들한테 할당 관련되서 오버로딩이 됨.
+new delete 는 오버로딩 함수이다.
+
+//xnew , xdelete 사용자가 원하는 정책으로 할당 delete 를 할 수 있다.
+//placement new 를 통해서 할당된 메모리의 생성자 호출
+//인자가 여러개 있을 수 있다. -> 배러릭 템플릿으로 가변적 인자를 받을 수 있게 변경됬다.
+
+/*
+//옛날에는 함수가 여러 인자를 받을 수 있게 이렇게 template을 만들었다.
+template<typename Type>
+Type* xnew() {
+	Type* memory = static_cast<Type*>(BaseAllocator::Alloc(sizeof(Type)));
+
+	//placement new
+	new(memory)Type(args);
+	return memory;
+}
+
+template<typename Type, typename T1>
+Type* xnew(T1 t1) {
+	Type* memory = static_cast<Type*>(BaseAllocator::Alloc(sizeof(Type)));
+
+	//placement new
+	new(memory)Type(t1);
+	return memory;
+}
+
+template<typename Type, typename T1, typename T2>
+Type* xnew(T1 t1, T2 t2) {
+	Type* memory = static_cast<Type*>(BaseAllocator::Alloc(sizeof(Type)));
+
+	//placement new
+	new(memory)Type(t1, t2);
+	return memory;
+}
