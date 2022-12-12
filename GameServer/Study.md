@@ -413,3 +413,56 @@ Type* xnew(T1 t1, T2 t2) {
 	new(memory)Type(t1, t2);
 	return memory;
 }
+
+##메모리 오염 문제
+메모리 오염일 경우 바로 Crash가 나면 좋지만... Crash가 나지 않으면 2주 뒤에 발생 할 수 있음.
+나 혼자만 짜는게 아니고.. 여러 작업자들이 작업하기 때문에.. 추적하기 어려움. [예측범위에서 벗어남]
+
+Knight* k1 = new Knight();
+	k1->_hp = 200;
+	k1->_mp = 300;
+	delete k1;
+	k1 = nullptr;
+	k1->_hp = 100; //k1 사용 가능 //Use-After-Free
+	//메모리 삭제를 하더라도, 메모리 접그 후 사용이 가능합니다.
+	//스마트 포인터로 어느정도 커버가 가능함
+
+	//문제는 해제한 메모리에 대한 접근을 할경우, 대부분 공유 메모리에서 해당 문제가 많이 발생합니다.
+	vector<int32> v{ 1 ,2, 3, 4, 5 };
+	for (int32 i = 0; i < 5; ++i) {
+		int32 value = v[i]; 
+
+		//TODO 
+		if (value = 3) {
+			v.clear();
+		}
+	}
+
+	//Casting 문제 메모리 오염
+	//메모리 오버플로우현상 발생, 강제 static_cast 를 할경우
+	//대부분 dynamic_cast 는 성능상 안좋기 떄문에 확실한 경우 static_cast 를 사용합니다.
+
+	Player* p = new Player();
+	Knight* k = static_cast<Knight*>(p);
+
+	k->_hp = 200;
+	
+OS 레벨에서 Page 단위만큼 보안 레벨을 설정 할 수 있다. R or W or RW or x
+
+SYSTEM_INFO info;	//system 정보를 가져온다.
+	::GetSystemInfo(&info);
+
+	info.dwPageSize; //4kb page 사이즈를 가져온다.
+	info.dwAllocationGranularity;		//64kb
+
+				//아무 위치에 ,4 byte 공간을 , 예약|커밋을 RW 권한으로 해줘
+	int* test = (int*)::VirtualAlloc(NULL, 4, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	*test = 100;
+	::VirtualFree(test, 0, MEM_RELEASE);
+
+	*test = 200; //Crash가 발생 <- new delete 예약어와 다른점.
+
+	//VirtualAlloc, Free 를 사용할 경우 운영체제 커널단에 메모리 예약과 해제를 하기 떄문에, 만약 해제된 메모리에 접근할 경우 Crash가 발생함.
+	//하지만 C++ 에서 제공해주는 new , delete 예약어를 사용할 경우 CheckCrash 까지 발생하지 않음을 유추할 수 있음. 
+	
+	

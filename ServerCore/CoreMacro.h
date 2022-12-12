@@ -38,8 +38,8 @@
 ///
 
 #ifdef _DEBUG
-#define XAlloc(size) BaseAllocator::Alloc(size)
-#define XRelease(ptr) BaseAllocator::Release(ptr)
+#define XAlloc(size) StompAllocator::Alloc(size)
+#define XRelease(ptr) StompAllocator::Release(ptr)
 #else
 #define XAlloc(size) BaseAllocator::Alloc(size)
 #define XRelease(ptr) BaseAllocator::Release(ptr)
