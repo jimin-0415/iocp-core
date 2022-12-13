@@ -41,3 +41,9 @@ private:
 	vector<MemoryPool*> _pools;					//기본 vector 생성, 해당 vector는 직접 만든 메모리로 관리하면 안됨.
 	MemoryPool* _poolTable[MAX_ALLOC_SIZE + 1]; //Memory Find Helper Table //메모리를 빠르게 찾도록 한다.
 };
+
+//make_shared Memory Pool 사용 버전
+template<typename Type>
+shared_ptr<Type> MakeShared() {
+	return shared_ptr<Type> { xnew<Type>(), xdelete<Type>};
+}

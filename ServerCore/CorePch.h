@@ -20,4 +20,6 @@ using namespace std;
 
 #include "Lock.h"
 
+//#define _STOMP
+
 void HelloWorld();

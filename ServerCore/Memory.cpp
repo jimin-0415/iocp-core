@@ -51,6 +51,9 @@ void* Memory::Allocate(int32 size)
 	MemoryHeader* header = nullptr;
 	const int32 allocSize = size + sizeof(MemoryHeader); //[header][data] 64byte를 할당할 경우 128byte 크기 메모리 풀에 할당.
 	
+#ifdef _STOMP
+	header = reinterpret_cast<MemoryHeader*>(StompAllocator::Alloc(allocSize));
+#else
 	if (allocSize > MAX_ALLOC_SIZE) {
 		header = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(allocSize, SLIST_ALIGNMENT));
 	}
@@ -58,6 +61,7 @@ void* Memory::Allocate(int32 size)
 		//Pool에서 꺼내온다.
 		header = _poolTable[allocSize]->Pop();
 	}
+#endif
 
 	return MemoryHeader::AttachHeader(header, allocSize); //header에 해당 정보 기록
 }
@@ -65,7 +69,9 @@ void* Memory::Allocate(int32 size)
 void Memory::Release(void* ptr)
 {
 	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
-
+#ifdef _STOMP
+	StompAllocator::Release(header);
+#else
 	const int32 allocSize = header->allocSize;
 	
 	if (allocSize > MAX_ALLOC_SIZE) {
@@ -75,4 +81,5 @@ void Memory::Release(void* ptr)
 		//메모리 풀에 반납
 		_poolTable[allocSize]->Push(header);
 	}
+#endif
 }
