@@ -724,3 +724,5 @@ SListEntry* PopEntryList(SListHeader* header) {
 그럴 경우 오브젝트 풀을 쓰게 되면 명확히 어떤 클래스에서 메모리오염이 생겼는지 알 수 있다.
 
 그리고 메모리 풀과, StompMemoryPool을 모두 사용 불가하기 때문에, 케이스에 따라서 별도로 사용할 수 있도로 한다.
+
+###TypeCast
