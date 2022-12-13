@@ -924,3 +924,6 @@ UDP
 
 속도를 살리면서 UDP나쁜 정책을 보완함 Reliable UDP
 
+UDP 동작 방식 - 만약 SendBuffer, Recv Buffer 꽉찰 경우
+-> Client에서 막 SendBuffer를 보냄 <- success - 분실의 책임이 없기 때문
+-> Server Recv 에서는 받지 못함 [꽉차서] <- 패킷 유실로 이루어짐
