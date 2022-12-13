@@ -5,6 +5,11 @@
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
+void HandleError(const char* cuase) {
+    int errCode = ::WSAGetLastError();
+    cout << cuase << errCode << endl;
+}
+
 int main()
 {
     //Winsock 라이브러리 초기화 ws2_32 초기화
@@ -16,51 +21,70 @@ int main()
     //type : Tcp, Udp
     //protocol : 0
     // return : descriptor <- 정수 받은 각 socket 의 식별 번호
-    SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET clientSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (clientSocket == INVALID_SOCKET) {
-        int errCode = ::WSAGetLastError();
-        cout << "Socket ErrorCode :" << errCode << endl;
+        HandleError("Socket ErrorCode");
         return 0;
     }
 
-    SOCKADDR_IN serverAddr; //ip4 일경우 이 구조체 사용
-    ::memset(&serverAddr, 0, sizeof(serverAddr)); //메모리 초기화
+    SOCKADDR_IN serverAddr; 
+    ::memset(&serverAddr, 0, sizeof(serverAddr)); 
     serverAddr.sin_family = AF_INET;
-    //serverAddr.sin_addr.s_addr = ::inet_addr("127.0.0.1") //너무 옛날 버전
     ::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
-    serverAddr.sin_port = ::htons(7777);    //http : 80 같은 번호는 예약이 되어 있다.
+    serverAddr.sin_port = ::htons(7777);   
 
-    //host to network short
-    //Little-Endian vs Big-Endian
-    //ex) 0x12345678    4바이트 정수 저장
-    // low [0x78][0x56][0x34][0x12] high <   little , cpu에 따라서 다르다, 요즘은 모두 little 엔디안 방식 [client] 
-    // <- 로컬 컴퓨터 환경은 little 방식이다
-     // low [0x12][0x34][0x56][0x78] high <   Big -> 받는 쪽은 반대로 받아야 한다. bigEndian 방식으로. [server]
-    
-    if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        int errCode = ::WSAGetLastError();
-        cout << "Connet ErrorCode :" << errCode << endl;
-        return 0;
-    }
-
-    //Connect Success
-    cout << "Connected To Server!" << endl;
+    //-Connected Udp -> 즐겨찾기 처럼 보낼 대상을 등록한다.
+    ::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+    //---------------------------
 
     while (true) {
-
         char sendBuffer[100] = "Hello World!";
         
-        for (int i = 0; i < 10; ++i) {
-            int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-            if (resultCode == SOCKET_ERROR) {
-                int errCode = ::WSAGetLastError();
-                cout << "send ErrorCode :" << errCode << endl;
-                return 0;
-            }
+        //--Unconnected Udp 
+        //나의 ip주소, 포트번호가 설정됨.  
+        /*int32 resultCode = ::sendto(clientSocket, sendBuffer, sizeof(sendBuffer), 0, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+        if (resultCode == SOCKET_ERROR) {
+            HandleError("send ErrorCode :");
+            return 0;
+        }*/
+        //---
 
-            cout << "Send Data ! size : " << sizeof(sendBuffer) << endl;
+        //-Connected Udp -> 보낼 때는 sedn로 보낸다.
+        int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+        if (resultCode == SOCKET_ERROR) {
+            HandleError("send ErrorCode :");
+            return 0;
         }
+        //---
+
+
+        cout << "Send Data ! size : " << sizeof(sendBuffer) << endl;
         
+        SOCKADDR_IN recvAddr;
+        ::memset(&recvAddr, 0, sizeof(recvAddr));
+        int32 addrLen = sizeof(recvAddr);
+
+        char recvBuffer[1000];
+
+        //--Unconnected Udp 
+        /*int32 recvLen = ::recvfrom(clientSocket, recvBuffer, sizeof(recvBuffer), 0
+            , (SOCKADDR*)&recvAddr, &addrLen);*/
+        //-----
+
+        //--Unconnected Udp 
+        int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0
+                    );
+        //-----
+
+
+        if (recvLen <= 0) {
+            HandleError("RecvFrom");
+            return 0;
+        }
+
+        cout << "Recv Data ! Data : " << recvBuffer << endl;
+        cout << "Recv Data ! Len : " << recvLen << endl;
+
         this_thread::sleep_for(1s);
     }
 

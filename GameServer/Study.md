@@ -927,3 +927,10 @@ UDP
 UDP 동작 방식 - 만약 SendBuffer, Recv Buffer 꽉찰 경우
 -> Client에서 막 SendBuffer를 보냄 <- success - 분실의 책임이 없기 때문
 -> Server Recv 에서는 받지 못함 [꽉차서] <- 패킷 유실로 이루어짐
+
+//UDP
+-> port번호는 send 하는 시점에 결정됨. 
+-> 100byte 10개를 한번에 보냈을 경우 바운더리가 있기때문에 .100byte 씩 읽는다.
+
+//TCP
+-> port 번호는 connect 하는 시점에 결정됨. 
