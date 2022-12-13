@@ -48,6 +48,19 @@ int main()
 
     while (true) {
 
+        char sendBuffer[100] = "Hello World!";
+        
+        for (int i = 0; i < 10; ++i) {
+            int32 resultCode = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+            if (resultCode == SOCKET_ERROR) {
+                int errCode = ::WSAGetLastError();
+                cout << "send ErrorCode :" << errCode << endl;
+                return 0;
+            }
+
+            cout << "Send Data ! size : " << sizeof(sendBuffer) << endl;
+        }
+        
         this_thread::sleep_for(1s);
     }
 
