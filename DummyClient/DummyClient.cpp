@@ -33,7 +33,8 @@ int main()
     ::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
     serverAddr.sin_port = ::htons(7777);   
 
-    //-Connected Udp -> 즐겨찾기 처럼 보낼 대상을 등록한다.
+    //-Connected Udp -> 즐겨찾기 처럼 보낼 대상을 등록한다
+    //통신 방식이 달라지는것은 아니다. <- 자주 보내는 정보의 경우 사용.
     ::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
     //---------------------------
 
