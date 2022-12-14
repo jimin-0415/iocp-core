@@ -17,10 +17,10 @@ public:
 	IocpEvent(EventType type);	//virtual 로 만들지 않는 이유, 가상함수 테이블이 있을경우 첫번째 메모리가 Overlapped로 사용 불가
 	
 	void Init();
-	EventType GetType() { return _type; }
 
-protected:
-	EventType _type;
+public:
+	EventType eventType;
+	IocpObjectRef owner;
 };
 
 /// <summary>
@@ -48,12 +48,9 @@ public:
 	AcceptEvent()
 		:IocpEvent(EventType::Accept) { }
 
-	void SetSession(Session* session) { _session = session; }
-	Session* GetSession() { return _session; }
-
-private:
+public:
 	//TODO. Accept시 발급 할 Session
-	Session* _session = nullptr;
+	SessionRef session = nullptr;
 };
 
 

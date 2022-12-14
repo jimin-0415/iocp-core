@@ -20,6 +20,13 @@ using CondVar = std::condition_variable;
 using UniqueLock = std::unique_lock<std::mutex>;
 using LockGuard = std::lock_guard<std::mutex>;
 
+//SharedPtr 을 Ref 네이밍 컨벤션 사용
+using IocpCoreRef = std::shared_ptr<class IocpCore>;
+using IocpObjectRef = std::shared_ptr<class IocpObject>;
+using SessionRef = std::shared_ptr<class Session>;
+using ListenerRef = std::shared_ptr<class Listener>;
+using ServerServiceRef = std::shared_ptr<class ServerService>;
+
 #define size16(val) static_cast<int16>(sizeof(val))
 #define size32(val) static_cast<int32>(sizeof(val))
 #define len16(arr)	static_cast<int16>(sizeof(arr)/sizeof(arr[0]))

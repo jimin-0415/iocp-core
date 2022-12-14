@@ -2,7 +2,7 @@
 #include "IocpEvent.h"
 
 IocpEvent::IocpEvent(EventType type)
-	:_type(type)
+	:eventType(type)
 {
 	Init();
 }

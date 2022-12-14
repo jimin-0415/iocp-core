@@ -40,6 +40,7 @@ bool Listener::StartAccept(NetAddress netAddress)
 	const int32 acceptCount = 1;
 	for (int i = 0; i < acceptCount; i++) {
 		AcceptEvent* acceptEvent = xnew<AcceptEvent>();
+		acceptEvent->owner = shared_from_this();	//ref 는 유지한채로 자기 자신을 넣는다. //acceptEvent->owner = shared_ptr<IocpObject>(this); <- 이렇게 하면 안된다.
 		_acceptEvents.push_back(acceptEvent);
 		RegisterAccept(acceptEvent);
 	}
@@ -59,7 +60,7 @@ HANDLE Listener::GetHandle()
 
 void Listener::Dispatch(IocpEvent* iocpEvent, int32 numofBytes)
 {
-	ASSERT_CRASH(iocpEvent->GetType() == EventType::Accept);
+	ASSERT_CRASH(iocpEvent->eventType == EventType::Accept);
 	AcceptEvent* acceptEvent = static_cast<AcceptEvent*>(iocpEvent);
 	ProcessAccept(acceptEvent);
 }
@@ -68,10 +69,10 @@ void Listener::Dispatch(IocpEvent* iocpEvent, int32 numofBytes)
 void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 {
 	//AcceptEvent에 해당 Session정보를 바인딩 해준다.
-	Session* session = xnew<Session>();
+	SessionRef session = MakeShared<Session>();
 	
 	acceptEvent->Init();
-	acceptEvent->SetSession(session);
+	acceptEvent->session = session;
 	
 	DWORD bytesReceived = 0;
 
@@ -89,7 +90,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 
 void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 {
-	Session* session = acceptEvent->GetSession();
+	SessionRef session = acceptEvent->session;
 	
 	if (false == SocketUtils::SetUpdateAcceptSocket(session->GetSocket(), _socket)) {
 		//문제가 발생하면 RegisterAccept를 걸어줘야한다. 재사용 해야 하기 때문.

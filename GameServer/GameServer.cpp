@@ -31,8 +31,9 @@ struct Session {
 
 int main()
 {
-    Listener listener;
-    listener.StartAccept(NetAddress(L"127.0.0.1", 7777));
+    //enable_shared_from_this 를 상속받은 객체는 무줘건 shared_ptr 형태로 사용해야 한다.
+    ListenerRef listener = MakeShared<Listener>();
+    listener->StartAccept(NetAddress(L"127.0.0.1", 7777));
 
     for (int32 i = 0; i < 5; i++) {
         GThreadManager->Launch([]() {

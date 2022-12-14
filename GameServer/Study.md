@@ -1071,3 +1071,8 @@ SELECT 모델 = (select 함수가 핵심이 된다)
 	select 함수는 동기 함수이다.
 
 ### 소켓 입출력 모델 - WSAEventSelect <- windows에서만 있다.
+
+
+//IOCP 에 IocpObject에 데이터 오염이 발생할 수 있다.
+-> IocpObject 를 refcounting 한다. -> 그렇게 되면, 이중 shared되게 되면 문제가 생긴다.
+iocp Event에 나를 걸어준 객체를 알고있다.

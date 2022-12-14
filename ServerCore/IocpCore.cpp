@@ -17,19 +17,21 @@ IocpCore::~IocpCore()
 
 bool IocpCore::Register(IocpObject* iocpObject)
 {
-	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandler, reinterpret_cast<ULONG_PTR>(iocpObject), 0);
+	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandler, /*key*/0, 0);
 }
 
 //worker Thread가 확인 하는 함수.
 bool IocpCore::Dispatch(uint32 timeoutMs)
 {
 	DWORD numofBytes = 0;
-	IocpObject* iocpObject = nullptr;	//등록한 iocpObject와 
+	ULONG_PTR key = 0;
+	//IocpObject* iocpObject = nullptr;	//등록한 iocpObject와  <- 해당 Object의 데이터 오염 문제가 발생 할 수 있음.
 	IocpEvent* iocpEvent = nullptr;		//어떤 이벤트가 호출됬는지 아는 iocpEvent를 out으로 보냄
 	
-	if (::GetQueuedCompletionStatus(_iocpHandler, OUT & numofBytes, OUT reinterpret_cast<PULONG_PTR>(&iocpObject)
+	if (::GetQueuedCompletionStatus(_iocpHandler, OUT & numofBytes, OUT reinterpret_cast<PULONG_PTR>(&key)
 		, OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent), timeoutMs)) {
-
+		//복원
+		IocpObjectRef iocpObject = iocpEvent->owner;
 		iocpObject->Dispatch(iocpEvent, numofBytes);
 
 	}
@@ -41,6 +43,7 @@ bool IocpCore::Dispatch(uint32 timeoutMs)
 			return false;
 		default:
 			//TODO : 로그 찍기.
+			IocpObjectRef iocpObject = iocpEvent->owner;
 			iocpObject->Dispatch(iocpEvent, numofBytes);
 			break;
 		}
