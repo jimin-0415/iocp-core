@@ -24,11 +24,8 @@ public:
 
 	HANDLE GetHandle() { return _iocpHandler; }
 
-	bool Register(class IocpObject* iocpObject);
+	bool Register(IocpObjectRef iocpObject);
 	bool Dispatch(uint32 timeoutMs = INFINITE); //worker 쓰레드에서 확인하는 함수 //getQueueCompletionStatuon 
 private:
 	HANDLE _iocpHandler;
 };
-
-//Temp
-extern IocpCore GIocpCore;

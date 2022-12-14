@@ -3,7 +3,7 @@
 #include "NetAddress.h"
 
 class AcceptEvent;
-
+class ServerService;
 /// <summary>
 /// Listen Session
 /// </summary>
@@ -16,7 +16,7 @@ public:
 
 public:
 	//public Function
-	bool StartAccept(NetAddress netAddress);
+	bool StartAccept(ServerServiceRef service);
 	void CloseSocket();
 
 public:
@@ -32,5 +32,6 @@ private:
 protected:
 	SOCKET _socket = INVALID_SOCKET;
 	Vector<AcceptEvent*> _acceptEvents;
+	ServerServiceRef _service;
 };
 

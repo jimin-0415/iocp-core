@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "IocpCore.h"
 #include "IocpEvent.h"
-//Temp
-IocpCore GIocpCore;
 
 IocpCore::IocpCore()
 {
@@ -15,7 +13,7 @@ IocpCore::~IocpCore()
 	::CloseHandle(_iocpHandler);
 }
 
-bool IocpCore::Register(IocpObject* iocpObject)
+bool IocpCore::Register(IocpObjectRef iocpObject)
 {
 	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandler, /*key*/0, 0);
 }

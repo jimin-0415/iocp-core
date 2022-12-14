@@ -38,6 +38,7 @@
     <ClCompile Include="NetAddress.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="RefCounting.cpp" />
+    <ClCompile Include="Service.cpp" />
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="SocketUtils.cpp" />
     <ClCompile Include="ThreadManager.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RefCounting.h" />
+    <ClInclude Include="Service.h" />
     <ClInclude Include="Session.h" />
     <ClInclude Include="SocketUtils.h" />
     <ClInclude Include="ThreadManager.h" />

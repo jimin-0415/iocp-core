@@ -35,9 +35,10 @@ public:
 #endif
 	}
 
-	static shared_ptr<Type> MakeShared() {
+	template<typename... Args>
+	static shared_ptr<Type> MakeShared(Args&&... args) {
 		//shared_ptr 에 관리 객체와 , 소멸 될떄 호출 함수를 설정 할 수 있다.
-		shared_ptr<Type> ptr = { Pop(), Push };
+		shared_ptr<Type> ptr = { Pop(forward<Args>(args)...), Push };
 		return ptr;
 	}
 

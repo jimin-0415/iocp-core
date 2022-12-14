@@ -43,7 +43,7 @@ private:
 };
 
 //make_shared Memory Pool 사용 버전
-template<typename Type>
-shared_ptr<Type> MakeShared() {
-	return shared_ptr<Type> { xnew<Type>(), xdelete<Type>};
+template<typename Type, typename... Args>
+shared_ptr<Type> MakeShared(Args&&... args) {
+	return shared_ptr<Type> { xnew<Type>(forward<Args>(args)...), xdelete<Type>};
 }

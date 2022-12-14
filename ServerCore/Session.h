@@ -25,7 +25,7 @@ public:
 public:
 	
 	//Temp
-	char _recvBuffer[1000];
+	char _recvBuffer[1000] = {};
 
 private:
 	SOCKET _socket = INVALID_SOCKET;

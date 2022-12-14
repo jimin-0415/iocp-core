@@ -3,6 +3,7 @@
 #include "SocketUtils.h"
 #include "IocpEvent.h"
 #include "Session.h"
+#include "Service.h"
 
 Listener::~Listener()
 {
@@ -14,14 +15,17 @@ Listener::~Listener()
 	}
 }
 
-bool Listener::StartAccept(NetAddress netAddress)
+bool Listener::StartAccept(ServerServiceRef service)
 {
+	_service = service;
+	if (_service == nullptr)
+		return false;
 	_socket = SocketUtils::CreateSocket();
 	if (_socket == INVALID_SOCKET)
 		return false;
 	
-	//iocp 등록 <-Listen 소켓 iocp 등록
-	if (GIocpCore.Register(this) == false)	
+	//iocp 등록 <-Listen 소켓 iocp 등록    //smart Pointer 로 변환.
+	if (_service->GetIocpCore()->Register(shared_from_this()) == false)
 		return false;
 
 	if (SocketUtils::SetReuseAddress(_socket, true) == false)
@@ -30,14 +34,14 @@ bool Listener::StartAccept(NetAddress netAddress)
 	if (SocketUtils::SetLinger(_socket, 0, 0) == false)
 		return false;
 
-	if (SocketUtils::Bind(_socket, netAddress) == false)
+	if (SocketUtils::Bind(_socket, _service->GetNetAddress()) == false)
 		return false;
 	
 	if (SocketUtils::Listen(_socket) == false)
 		return false;
 
 	//accept 등록
-	const int32 acceptCount = 1;
+	const int32 acceptCount = _service->GetMaxSessionCount();
 	for (int i = 0; i < acceptCount; i++) {
 		AcceptEvent* acceptEvent = xnew<AcceptEvent>();
 		acceptEvent->owner = shared_from_this();	//ref 는 유지한채로 자기 자신을 넣는다. //acceptEvent->owner = shared_ptr<IocpObject>(this); <- 이렇게 하면 안된다.
@@ -69,7 +73,7 @@ void Listener::Dispatch(IocpEvent* iocpEvent, int32 numofBytes)
 void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 {
 	//AcceptEvent에 해당 Session정보를 바인딩 해준다.
-	SessionRef session = MakeShared<Session>();
+	SessionRef session = _service->CreateSession();	//Register Iocp;
 	
 	acceptEvent->Init();
 	acceptEvent->session = session;
