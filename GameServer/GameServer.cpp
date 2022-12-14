@@ -65,119 +65,149 @@ int main()
 
     cout << "Accept" << endl;
 
-    //SELECT 모델 = (select 함수가 핵심이 된다)
-    // Socekt 함수 호출이 성공할 시점을 미리 알 수 있다. - blocking, Non-Blocking 모두 적용 가능.
-    //문제 상황 > <- 수신 버퍼에 데이터가 없을때, read한다는 상황.
-    //문제상황 2 > <- 송신버퍼가 꽉 찼을때 write한다거나 하는 상황.
-
-    //- 블로킹 소켓 : 조건이 만족되지 않아서 블로킹 되는 상황 방지.
-    //- 논블로킹 소켓 : 조건이 만족되지 않아서 불필요하게 반복체크하는 상황 예방.
-
-    //socket set
-    //1. 읽기[] 쓰기[] 예외 [] 관찰 대상을 등록한다. 모두 넣을 필요 없음
-    //원하는 관찰 대상을 넣는다. 
-    //예외 ? OutOfBand - Send() 마지막 인자 MSG_OOB로 특수 데이터를 보냄
-    //받는 쪽에서도 recv OOB 세팅을 해야 읽을 수 있다.
-    //2. select(readSet, writeSet, exceptSet); 을 넣어서 관찰 시작.
-    //3. 적어도 하나의 소켓이 준비되면 리턴 <- 낙오자는 알아서 제거됨.
-    // ex > 1,2,3 소켓을 대상으로 일기를 하는데.. 이것을 socekt set에 등록해서 체크를 한다.
-    // 만약여기서 select를 호출하면 1.2.3을 관찰하다가 만약 2번에 데이터가 와서 수신버퍼가 왔다면 개수를 반환해 준다.
-    // 그러면 읽기에는 2만 남고 나머지 1,3는 제거된다. -> 처리를 끝나면 다시 1,2,3을 읽기 select에 세팅한다.
-
-    //함수 호출 을 체크하고 한다.
-    ///장점 : 구현이 간단하고, 리소스 낭비를 줄일 수 있다.
-    //담점 : 반복적으로 등록에 문제가 생김, FD_SETSIZE <- 64개까지밖에 등록을 못한다. fd_set 하나에...만약 640명이면 640개를 만들면된다.
-
-    //fd_set read;
-    // FD_ZERO : 비운다.
-    //FD_ZERO(set);
-
-    //FD_SET : 소켓 s를 넣는다.
-    //FD_SET(s, &set);
-    // 
-    //FD_CLR : 소켓 s 를 제거
-    //FD_CLR(s, &set);
+    // WSAEventSelect = (WSAEventSelect 함수가 핵심이다)
+    /// 소켓과 관련된 네이트워 이벤트 [이벤트객체] 를 통해서 감지한다.
+    /// 
+    /// 이벤트 객체 관련 함수들
+    /// 생성 : WSACreateEvent() - 수동 리셋 Manual-Resset + Non-Signaled 상태 시작
+    /// 삭제 : WSACloseEvent();
+    /// 신호 상태 감지 : WSAWaitForMultipleEvents
+    /// 구체적인 네트워크 이벤트 알아내기 : WSAEnumNetworkEvents;
+    /// 
+    /// 1. 소켓 - 이벤트 객체 연동 - 소켓 개수 만큼 이벤트 개수를 만들어야 한다.
+    /// WSAEventSelect(socket, event, networkEvent); <- 이녀석은 단순히 등록함.
+    /// - 관심있는 네트워크 이벤트 
+    /// FD_Accept : 접속 클라가 있음 accept
+    /// FD_READ : 데이터 수신 가능 , recv, recvfrom
+    /// FD_WRITE : 데이터 송신 가능 , send , sendto
+    /// FD_CLOSE : 상대가 접속 종료
+    /// FD_CONNECT : 통신을 위한 연결 절차 완료
+    /// FD_OOB 
     
-    //FD_ISSET : 소켓 s가 set에 들어가 있으면 0이 아닌값을 리턴한다.
+    //주의 사항
+    // WSAEventSelect 함수를 호출하면, 해당 소켓을 자동으로 넌 블로킹 모드로 전환한다.
+    // accept()함수를 리턴하는 소켓은 listenSocket과 동일한 속성을 갖는다.
+    // - 따라서 clientSocket은 FD_READ, FD_WRITE 등을 다시 등록해야한다.
+    // 드물게 WSAEWOULDBLOCK 오류에 대한 예외 처리가 필요하다.
+    // 중요)
+    // - 이벤트 발생 시 , 적절한 소켓 함수 호출을 해야 한다.
+    // - 아니면 다음번에는 동일 네트워크 이벤트가 발생하지 않는다.
+    // 예시 ) 만약 FD_READ를 탐색도중 event 호출이 되서 FD_READ에 .. recv 를 하지 않을 경우, 다시 통지 안해줌
+    // 이벤트가 발생하면 짝이 맞는 녀석에 대해서 호출을 해야 한다. - 안하면 두번다시 이벤트 호출되지 않음
 
+    // 1). count , event
+    // 2) waitAll : 모두 기다림? 하나만 완료되도 OK?
+    // 3) timeout : 타임아웃 시간
+    // 4) 지금은 사용 x
+    // return : 완료된 첫번째 인덱스
+    //WSAWaitForMultipleEvents. <- 이걸로 이벤트 호출을 받는다.
+
+    //1 ) socket
+    // 2) eventObject : socket과 연동된 이벤트 객체 핸들을 넘겨주면, 이벤트 객체를 non-signaled 상태로 변경
+    // 3) networkEvent : 네트워크 이벤트 / 오류정보가 저장
+    //WASEnumNetworkEvents;
+
+    vector<WSAEVENT> wsaEvents;
     vector<Session> sessions;
     sessions.reserve(100);
 
-    fd_set reads;
-    fd_set writes;
+    WSAEVENT listenEvent = ::WSACreateEvent();
+    wsaEvents.push_back(listenEvent);
+    sessions.push_back(Session{ listenSocket });
 
-    while (true) {
-        //set은 매 루프마다 초기화 시켜준다.
-        FD_ZERO(&reads);
-        FD_ZERO(&writes);
-    
-        //FD_SET 은 계속적으로 등록함, 만약에 누군가 호출되면 낙오자는 자연스럽게 제거되기 때문에, 다시 등록 필요.
-        //socket 등록
-        FD_SET(listenSocket, &reads);
+    //Accept close의 event 를 받는다.
+    if (::WSAEventSelect(listenSocket, listenEvent, FD_ACCEPT | FD_CLOSE) == SOCKET_ERROR)
+        return 0;
 
-        //socket 등록
-        for (Session& s : sessions) {
-            //현재는 echo 서버로 작동한다. 만약 recv를 받았으면 보내기를 해야 한다. 그러면 Sendbyte의 크기가 커지기 때문에
-            //아래와 같은 if문이 생성된다.
-            if (s.recvBytes <= s.sendBytes) 
-                FD_SET(s.socket, &reads);
-            else
-                FD_SET(s.socket, &writes);
-        }
+    while (true) 
+    {
+        this_thread::sleep_for(1s);
 
-        //마지막에 timout인자 설정 가능
-        //timeval timeOut;
-        //timeOut.tv_sec; //sec
-      
-        int32 retVal = ::select(0, &reads, &writes, nullptr, nullptr);
-        if (retVal == SOCKET_ERROR)
-            break;
+        //WSA_WAIT_EVENT_0 더한값이 outPut으로 나옴 MSDNS에 나옴
+        //100개의 이벤트를 모두 등록 <- 동일하게, select처럼 이벤트개수 64개 제약이 있음
+        int32 index =::WSAWaitForMultipleEvents(wsaEvents.size(), &wsaEvents[0], FALSE, WSA_INFINITE, FALSE);
+        if (index == WSA_WAIT_FAILED)
+            continue;
 
-        //Listen소켓 체크 -> listen 소켓이 준비된 상태이다
-        if (FD_ISSET(listenSocket, &reads)) {
+        index -= WSA_WAIT_EVENT_0;
+
+        //이벤트 초기화 <- 해당 기능은 WSAEnumNetworkEvents 여기에 포함되서 안해도 상관없다.
+        //::WSAResetEvent(wsaEvents[index]);
+
+        //어떤 애들때문에 event가 발생했는지 모른다 그걸 체크하기 위해 아래 함수 사용
+        //관찰할려는 결과물이 아래 구조체에 채워짐 -> 결과 물 추출했다.
+        WSANETWORKEVENTS netWorkEvents;
+        if (::WSAEnumNetworkEvents(sessions[index].socket, wsaEvents[index], &netWorkEvents) == SOCKET_ERROR)
+            continue;
+           
+        //Listner 소켓 체크
+        if (netWorkEvents.lNetworkEvents & FD_ACCEPT) {
+            //error-check
+            if (netWorkEvents.iErrorCode[FD_ACCEPT_BIT] != 0)
+                continue;
+
             SOCKADDR_IN  clientAddr;
             int32 addrLen = sizeof(clientAddr);
             SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
             if (clientSocket != INVALID_SOCKET) {
                 cout << "Client Connected " << endl;
-                sessions.push_back( Session{ clientSocket } );
+                
+                //새로 생성된 소켓을 다시 Event에 바인딩 한다.
+                WSAEVENT clientEvent = ::WSACreateEvent();
+                wsaEvents.push_back(clientEvent);
+                sessions.push_back(Session{ clientSocket });
+                
+                //등록
+                if (::WSAEventSelect(clientSocket, clientEvent, FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+                    return 0;
             }
         }
 
-        //나머지 소켓
-        for (Session& s : sessions) {
-            //Read Check
-            if (FD_ISSET(s.socket, &reads)) {
+        if (netWorkEvents.lNetworkEvents & FD_READ || netWorkEvents.lNetworkEvents & FD_WRITE) {
+            //error-check Read
+            if ((netWorkEvents.lNetworkEvents & FD_READ) && (netWorkEvents.iErrorCode[FD_READ_BIT] != 0))
+                continue;
+
+            //error-check Write
+            if ((netWorkEvents.lNetworkEvents & FD_WRITE) && (netWorkEvents.iErrorCode[FD_WRITE_BIT] != 0))
+                continue;
+
+            Session& s = sessions[index];
+
+            if (s.recvBytes == 0) {
                 int32 recvLen = ::recv(s.socket, s.recvBuffer, BUFSIZE, 0);
-                if (recvLen <= 0) {
-                    //TODO : sessions 제거
-                    //연결 끊킨 session은 벡터에서 제거
+                if (recvLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK) {
+                    //TODO : Revmove Session
                     continue;
                 }
-                s.recvBytes = recvLen;
-            }
 
-            //WriteCheck
-            if (FD_ISSET(s.socket, &writes)) {
-                //Send한 크기 뱉어줌.
-                //블로킹 모드 -> 모든 데이터 다 보냄
-                //논 블로킹 모드 -> 일부만 보낼 수 있음 (상대방 수신 버퍼 사황에 따라 ) <- 만약 100byte 보낼려는데, 상대방이 받을상황이
-                //안된다면 10byte만 갈 수 있다.
+                s.recvBytes = recvLen;
+                cout << "Recv Data = " << recvLen << endl;
+            }
+            
+            //Write
+            if (s.recvBytes > s.sendBytes) {
+                //한버에 안보내주는 경우는 없지만 그래도 안전하게 만들어야 한다.
                 int32 sendLen = ::send(s.socket, &s.recvBuffer[s.sendBytes], s.recvBytes - s.sendBytes, 0);
-                if (sendLen == SOCKET_ERROR) {
-                    //TODO. Session 제거 
+                if (sendLen == SOCKET_ERROR && ::WSAGetLastError() != WSAEWOULDBLOCK) {
+                    //TODO : Remove Session
                     continue;
                 }
 
                 s.sendBytes += sendLen;
                 if (s.recvBytes == s.sendBytes) {
-                    //0, 0 초기화
+                    //모두 받았으면 다시 초기화
                     s.recvBytes = 0;
                     s.sendBytes = 0;
                 }
+
+                cout << "Send Data = " << sendLen << endl;
             }
         }
 
+        if (netWorkEvents.lNetworkEvents & FD_CLOSE) {
+            //TODO : Close 
+        }
     }
 
     //원속 종료

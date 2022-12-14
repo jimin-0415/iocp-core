@@ -1033,7 +1033,7 @@ recv, recvfrom 수신 버퍼에 도착한 데이터가 있고, 이를 유저 레
 2. 논블로킹으로 바꾼다고 해서 모든 문제가 해결되는것은 아니다. - CPU 사이클 낭비를 줄여야 한다. 여러 소켓 모델로 해결
 
 
-### Select모델
+### 소켓입출력모델 - Select모델 
 SELECT 모델 = (select 함수가 핵심이 된다)
     Socekt 함수 호출이 성공할 시점을 미리 알 수 있다. - blocking, Non-Blocking 모두 적용 가능.
     //문제 상황 > <- 수신 버퍼에 데이터가 없을때, read한다는 상황.
@@ -1068,3 +1068,6 @@ SELECT 모델 = (select 함수가 핵심이 된다)
     //FD_CLR(s, &set);
     
     //FD_ISSET : 소켓 s가 set에 들어가 있으면 0이 아닌값을 리턴한다.
+	select 함수는 동기 함수이다.
+
+### 소켓 입출력 모델 - WSAEventSelect <- windows에서만 있다.
