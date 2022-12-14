@@ -25,6 +25,12 @@ void HandleError(const char* cuase) {
     cout << cuase << errCode << endl;
 }
 
+//블로킹을 논 블로킹으로 바꾼다고 해서, 성능 이점이 없다.
+//현재 코드를 보면 계속적으로 Connection, Send, Recv가 오는지 확인하기 위해서 while문으로 루프를 보고있다.
+//불필요하게 체크를 하기 때문에 CPU를 계속 점유한 상태가 된다.
+//1. 소켓은 옵션을 바꾸면 논블로킹으로 바뀌는구나.
+//2. 논블로킹으로 바꾼다고 해서 모든 문제가 해결되는것은 아니다. - CPU 사이클 낭비를 줄여야 한다. 여러 소켓 모델로 해결
+
 int main()
 {
     //Winsock 라이브러리 초기화 ws2_32 초기화
@@ -38,78 +44,84 @@ int main()
         return 0;
     }
 
-    SOCKADDR_IN serverAddr; //ip4 일경우 이 구조체 사용
-    ::memset(&serverAddr, 0, sizeof(serverAddr)); //메모리 초기화
+    SOCKET listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSocket == INVALID_SOCKET)
+        return 0;
+
+    //socket 의 io Mode 제거
+    u_long on = 1;
+    if (::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET)
+        return 0;
+
+    SOCKADDR_IN serverAddr;
+    ::memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);   //모든 주소 연결 
-    serverAddr.sin_port = ::htons(7777);    //http : 80 같은 번호는 예약이 되어 있다.
+    serverAddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
+    serverAddr.sin_port = ::htons(7777);
 
-    //커널의 RECV, SEND 버퍼 크기도 수정이 가능하다.
-    //옵션을 해석하고 처리할 주체? [level]
-    //소켓 코드 -> SOL_SOKET
-    // IPv4 -> IPPROTO_IP
-    // TCP 프로토콜 -> IPPROTO_TCP
+    //기본과 동일
+    if (::bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+        return 0;
 
-    // SO_KEEPALIVE //주기적으로 연결 상태 여부 확인 (TCP Only)
-    // 상대방이 소리 소문 없이 연결을 끊는경우가 있기 때문에..
-    // 주기 적으로 TCP 프로토콜 연결 상태 확인 -> 끊어진 연결 감지.
+    //Listen 도 동일
+    if (::listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
+        return 0;
 
-    bool enable = true;
-    ::setsockopt(serverSocket, SOL_SOCKET, SO_KEEPALIVE, (char*)&enable, sizeof(enable));
+    cout << "Accept" << endl;
 
-    // SO_LINGER = 지연하다.
-    // 송신 버퍼에 있는 데이터를 보낼것인가? 날릴것인가?
-    // Send -> closesocket 을 하면 Send 에서 보낸 버퍼에 남은 데이터는 어떻게 할것이냐
-    
-    // onoff =0 이면 closesocket()이 바로 리턴, 아니면 linger 초만큼 대기 (default 0)
-    LINGER linger;
-    linger.l_onoff = 1; //활성화
-    linger.l_linger = 5; //s 단위 5초
-    ::setsockopt(serverSocket, SOL_SOCKET, SO_LINGER, (char*)&linger, sizeof(linger));
+    SOCKADDR_IN clientAddr;
+    int32 addrLen = sizeof(clientAddr);
 
-    // Half - Close
-    // SD_SEND : send만 막는다.
-    // SD_RECEIVE : recv 막는다.
-    // SD_BOTH : 둘다 막는다.
-    // shutdown  전에 해당 소켓설정을 한다.
-    ::shutdown(serverSocket, SD_SEND);  
+    //Accept
+    while (true) {
+        SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &addrLen);
+        if (clientSocket == INVALID_SOCKET)
+        {
+            if (::WSAGetLastError() == WSAEWOULDBLOCK)
+                continue;
 
-    //송 수신 버퍼 크기를 4gb 그렇게 크게 못한다.
-    // 문서를 보고 사용할 애들값을 세팅해 준다.
-    // SO_SNDBUF = 송신버퍼 크기
-    // SO_RCVBUF = 수신버퍼 크기
-    int32 sendBufferSize;
-    int32 optionLen = sizeof(sendBufferSize);
-    ::getsockopt(serverSocket, SOL_SOCKET, SO_SNDBUF, (char*)&sendBufferSize, &optionLen);
-    cout << "송신 버퍼 크기 : " << sendBufferSize << endl;
+            //Error
+            break;
+        }
 
-    int32 recvBufferSize;
-    optionLen = sizeof(recvBufferSize);
-    ::getsockopt(serverSocket, SOL_SOCKET, SO_SNDBUF, (char*)&recvBufferSize, &optionLen);
-    cout << "송신 버퍼 크기 : " << recvBufferSize << endl;
+        cout << "Client Connected !" << endl;
 
-    // SO_REUSEADDR
-    // IP 주소 및 Port를 재사용 한다.
-    // 다른 프로그램 사용 혹은 서버를 강제종료하고 다시 켰을 경우 해당 찌끄레기가 남아서 해당 IP Port 바인딩 안되는 상황이 생김.
-    // 이때 해당 옵션을 통해서 IP Port를 재사용한다.
-    {
-        //개발 단계에서 편하라고 사용함.
-        bool enable = true;
-        ::setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&enable, sizeof(enable));
-    }
+        //Recv
+        while (true) {
+            char recvBuffer[1000];
+            int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+            if (recvLen == SOCKET_ERROR) {
+                if (::WSAGetLastError() == WSAEWOULDBLOCK)
+                    continue;
 
-    // IPPROTO_TCP
-    // TCP_NODELAY = Nagle 네이글 알고리즘 작동 여부
-    // 데이터가 충분히 크면 보내고, 그렇지 않으면 데이터가 충분히 쌓일때까지 대기 !
-    // 장점 : 작은 패킷이 불필요하게 많이 생성되는 일을 방지한다.
-    // 단점 : 반응 시간을 손해.
-    // 게임쪽에서는 거의 사용 안함. <- 직접 관리. 반응성 문제.
-    {
-        bool enable = true; // nagle 작동 안함.
-        ::setsockopt(serverSocket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(enable));
+                //Error
+                break;
+            }
+            else if (recvLen == 0) {
+                //연결 끊킴
+                break;
+            }
+
+            cout << "Recv Data Len = " << recvLen << endl;
+
+            //Send
+            while (true) {
+                if (::send(clientSocket, recvBuffer, recvLen, 0) == SOCKET_ERROR) {
+                    if (::WSAGetLastError() == WSAEWOULDBLOCK)
+                        continue;
+
+                    //Error
+                    break;
+                }
+
+                cout << "Send Data ! Len = " << recvLen << endl;
+                break;
+            }
+        }
+
     }
 
     ::WSACleanup();
-	return 0;
+    return 0;
 }
 

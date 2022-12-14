@@ -1017,3 +1017,17 @@ UDP 동작 방식 - 만약 SendBuffer, Recv Buffer 꽉찰 경우
         bool enable = true; // nagle 작동 안함.
         ::setsockopt(serverSocket, IPPROTO_TCP, TCP_NODELAY, (char*)&enable, sizeof(enable));
     }
+
+
+###블로킹 소켓
+accept -> 접속한 클라가 있을때 - 블로킹 해제
+connect -> 서버 접속 성공했을때 - 블로킹 해제
+send, recv 요청 데이터를 송신 버퍼에 복사했을때 - 블로킹 해제
+recv, recvfrom 수신 버퍼에 도착한 데이터가 있고, 이를 유저 레벨 버퍼에 복사했을 때 - 블로킹 해제
+
+### 논블로킹 (Non-Blocking)
+블로킹을 논 블로킹으로 바꾼다고 해서, 성능 이점이 없다.
+현재 코드를 보면 계속적으로 Connection, Send, Recv가 오는지 확인하기 위해서 while문으로 루프를 보고있다.
+불필요하게 체크를 하기 때문에 CPU를 계속 점유한 상태가 된다.
+1. 소켓은 옵션을 바꾸면 논블로킹으로 바뀌는구나.
+2. 논블로킹으로 바꾼다고 해서 모든 문제가 해결되는것은 아니다. - CPU 사이클 낭비를 줄여야 한다. 여러 소켓 모델로 해결
