@@ -4,6 +4,7 @@ class Session;
 enum class EventType : uint8
 {
 	Connect,
+	DisConnect,
 	Accept,
 	Recv,
 	Send,
@@ -37,6 +38,19 @@ private:
 	//TODO. 인자가 추가로 있을수도 없을 수 있다.
 };
 
+/// <summary>
+/// Disconnect Event 
+/// </summary>
+class DisConnectEvent : public IocpEvent
+{
+public:
+	DisConnectEvent()
+		:IocpEvent(EventType::DisConnect) {
+
+	}
+private:
+	//TODO. 인자가 추가로 있을수도 없을 수 있다.
+};
 
 /// <summary>
 /// Accept Event 

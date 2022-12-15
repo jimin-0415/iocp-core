@@ -22,6 +22,7 @@ public:
 
 public:
 	void	Send(BYTE* buffer, int32 len);
+	bool	Connect();
 	void	Disconnect(const WCHAR* cause);	//해킹 의심 , 상대방 연결 끊킴
 
 	shared_ptr<Service> GetService() { return _service.lock(); }
@@ -42,11 +43,13 @@ private:
 
 private:
 	//전송 관련 Protocol
-	void	RegisterConnect();
+	bool	RegisterConnect();
+	bool	RegisterDisConnect();
 	void	RegisterRecv();
 	void	RegisterSend(SendEvent* sendEvent);
 
 	void	ProcessConnect();
+	void	ProcessDisconnect();
 	void	ProcessRecv(int32 numOfBytes);
 	void	ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
 
@@ -80,5 +83,9 @@ private:
 private:
 	//IocpEvent 재사용..
 	RecvEvent	_recvEvent;
+
+	//IOCPEvent 재사용.. ServerType::Client 에서 사용
+	ConnectEvent _connectEvent;
+	DisConnectEvent _disConnectEvent;
 };
 

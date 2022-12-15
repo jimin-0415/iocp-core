@@ -37,9 +37,14 @@ void Session::Send(BYTE* buffer, int32 len)
     RegisterSend(sendEvent);
 }
 
+bool Session::Connect()
+{
+    return RegisterConnect();
+}
+
 void Session::Disconnect(const WCHAR* cause)
 {
-    //기존의 값을 뱉어준다.
+    //한번만 호출한다.
     if (_connected.exchange(false) == false)
         return;
 
@@ -47,8 +52,9 @@ void Session::Disconnect(const WCHAR* cause)
 
     //Contents 단 Override
     OnDisconnected();
-    SocketUtils::Close(_socket);
     GetService()->ReleaseSession(GetSessionRef());
+
+    RegisterDisConnect();
 }
 
 HANDLE Session::GetHandle()
@@ -61,7 +67,12 @@ void Session::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
 {
     switch (iocpEvent->eventType) {
     case EventType::Connect:
+        //Connector 라는 클래스로 따로 빼는것도 좋을거 같다.
+        //Client가 우리 서버로 붙을경우 Seesion 만들어질경우 
         ProcessConnect();
+        break;
+    case EventType::DisConnect:
+        ProcessDisconnect();
         break;
     case EventType::Recv:
         ProcessRecv(numOfBytes);
@@ -74,8 +85,52 @@ void Session::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
     }
 }
 
-void Session::RegisterConnect()
+bool Session::RegisterConnect()
 {
+    //두번 연결할 필요 x
+    if (IsConnected())
+        return false;
+
+    //Client 서비스에서만 가능 
+    if (GetService()->GetServiceType() != ServiceType::Client)
+        return false;
+    
+    if (SocketUtils::SetReuseAddress(_socket, true) == false)
+        return false;
+
+    if (SocketUtils::BindAnyAddress(_socket, 0 /*남는 주소 아무거나*/) == false)
+        return false;
+
+    _connectEvent.Init();
+    _connectEvent.owner = shared_from_this();   //Add _ref
+
+    DWORD numOfBytes = 0;
+    SOCKADDR_IN sockAddr = GetService()->GetNetAddress().GetSockAddr();
+    if (false == SocketUtils::ConnectEx(_socket, reinterpret_cast<SOCKADDR*>(&sockAddr), sizeof(sockAddr), nullptr
+        , 0, &numOfBytes, &_connectEvent)) {
+        int32 errorCode = ::WSAGetLastError();
+        if (errorCode != WSA_IO_PENDING) {
+            _connectEvent.owner = nullptr; //Release ref
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Session::RegisterDisConnect()
+{
+    _disConnectEvent.Init();
+    _disConnectEvent.owner = shared_from_this();    //Add ref
+    
+    //DE_REUSE_SOCKET : 소켓을 재사용한다. <- AcceptEx, ConnectEx 에 소켓을 재사용하도록 넘긴다.// IOCP로 전달
+    if (false == SocketUtils::DisconnectEx(_socket, &_disConnectEvent, TF_REUSE_SOCKET, 0)) {
+        int32 errorCode = ::WSAGetLastError();
+        if (errorCode != WSA_IO_PENDING) {
+            _disConnectEvent.owner = nullptr; //release ref
+            return false;
+        }
+    }
+    return true;
 }
 
 void Session::RegisterRecv()
@@ -131,6 +186,8 @@ void Session::RegisterSend(SendEvent* sendEvent)
 
 void Session::ProcessConnect()
 {
+    _connectEvent.owner = nullptr; //release ref
+
     _connected.store(true);
 
     //Session 등록
@@ -143,6 +200,12 @@ void Session::ProcessConnect()
     RegisterRecv();
 
     
+}
+
+void Session::ProcessDisconnect()
+{
+    //할게 없다.
+    _disConnectEvent.owner = nullptr; //release ref Owner;
 }
 
 void Session::ProcessRecv(int32 numOfBytes)
