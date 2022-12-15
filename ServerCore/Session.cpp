@@ -13,6 +13,30 @@ Session::~Session()
     SocketUtils::Close(_socket);
 }
 
+//언제 어디서 Send가 호출될지 모른다. 중복이 가능, 몬스터 잡을경우, 귓속말.. 등등..
+void Session::Send(BYTE* buffer, int32 len)
+{
+    //생각할 문제-> 
+    //1. Buffer 관리
+    //2. SnedEvent 관리, 단일 여러개 WSASend 중첩될지?
+    
+    //Temp
+    SendEvent* sendEvent = xnew<SendEvent>();
+    sendEvent->owner = shared_from_this();
+    //Send 여러번 호출하면 기존에 영역을 덮어쓸 수 있다.
+    //[    ][다음 버퍼] 다음 버퍼부터 밀어넣어야 한다. 
+    //Circular Buffer. <- 별로 안좋다. = 이유 : 복사 비용이 존재함.
+    //BroadCasting 할때마다. 모든 세션에 복사 마다 별로 좋지 않다.
+
+    sendEvent->buffer.resize(len);
+    ::memcpy(sendEvent->buffer.data(), buffer, len);
+
+    WRITE_LOCK;
+    //Buffer Pool이 꽉차서 Pending 됬을때도..Lock걸릴경우.
+    //Send를 할때마 한번씩 보내는것보다, Send를 호출하면 Buffer Pool을 모았다가 한번에 보내는게 성능상 좋다.
+    RegisterSend(sendEvent);
+}
+
 void Session::Disconnect(const WCHAR* cause)
 {
     //기존의 값을 뱉어준다.
@@ -43,7 +67,7 @@ void Session::Dispatch(IocpEvent* iocpEvent, int32 numOfBytes)
         ProcessRecv(numOfBytes);
         break;
     case EventType::Send:
-        ProcessSend(numOfBytes);
+        ProcessSend(static_cast<SendEvent*>(iocpEvent), numOfBytes);
         break;
     default:
         break;
@@ -83,8 +107,26 @@ void Session::RegisterRecv()
     }
 }
 
-void Session::RegisterSend()
+void Session::RegisterSend(SendEvent* sendEvent)
 {
+    if (IsConnected() == false)
+        return;
+
+    WSABUF wsaBuf;
+    wsaBuf.buf = (char*)sendEvent->buffer.data();
+    wsaBuf.len = (ULONG)sendEvent->buffer.size();
+
+    DWORD numofBytes = 0;
+    //WSASend가 Thread Safe 한가 ? Thread Safe하지 않는다.
+
+    if (SOCKET_ERROR == ::WSASend(_socket, &wsaBuf, 1, OUT & numofBytes, 0, sendEvent, nullptr)) {
+        int32 errorCode = ::WSAGetLastError();
+        if (errorCode != WSA_IO_PENDING) {
+            HandleError(errorCode);
+            sendEvent->owner = nullptr; //Release Ref
+            xdelete(sendEvent);
+        }
+    }
 }
 
 void Session::ProcessConnect()
@@ -97,7 +139,7 @@ void Session::ProcessConnect()
     //컨텐츠코드 오버로딩
     OnConnected();
 
-    //수신 등록
+    //수신 등록 
     RegisterRecv();
 
     
@@ -111,15 +153,26 @@ void Session::ProcessRecv(int32 numOfBytes)
         return;
     }
 
-    //TODO
-    cout << "Recv Data Len = " << numOfBytes << endl;
+    //Contents Override
+    OnRecv(_recvBuffer, numOfBytes);
 
     //수신 등록
     RegisterRecv();
 }
 
-void Session::ProcessSend(int32 numOfBytes)
+//Send는 Recv처럼 거는게 아니라... 넘길 데이터가 있을경우 Send를 호출한다. 중복 호출일경우 고려해야함
+void Session::ProcessSend(SendEvent* sendEvent, int32 numOfBytes)
 {
+    sendEvent->owner = nullptr; //release event
+    xdelete(sendEvent);
+
+    if (numOfBytes == 0) {
+        Disconnect(L"Send 0");
+        return;
+    }
+
+    //컨텐츠 코드에서 오버로딩 -> ProcessSend는 순서가 보장되지 않느다.
+    OnSend(numOfBytes);
 }
 
 void Session::HandleError(int32 errorCode)
