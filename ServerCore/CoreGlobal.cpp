@@ -7,6 +7,7 @@
 ThreadManager* GThreadManager = nullptr;
 DeadLockProfiler* GDeadLockProfiler = nullptr;
 Memory* GMemory = nullptr;
+SendBufferManager* GSendBufferManager = nullptr;
 
 // Core Global 을 cpp안에 정의해서 전역 객체로 사용한다.
 class CoreGlobal	
@@ -17,12 +18,14 @@ public:
 		GMemory = new Memory();
 		GThreadManager = new ThreadManager();
 		GDeadLockProfiler = new DeadLockProfiler();
+		GSendBufferManager = new SendBufferManager();
 		SocketUtils::Init();
 	}
 
 	~CoreGlobal()
 	{
 		delete GThreadManager;
+		delete GDeadLockProfiler;
 		delete GDeadLockProfiler;
 		delete GMemory;
 		SocketUtils::Clear();

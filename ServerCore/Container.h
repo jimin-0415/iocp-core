@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vector>
 #include <list>
 #include <stack>
@@ -14,6 +15,8 @@
 
 using namespace std;
 
+template<typename Type, uint32 Size>
+using Array = array<Type, Size>;
 
 template<typename Type>
 using Vector = vector<Type, STLAllocator<Type>>;

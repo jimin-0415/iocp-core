@@ -18,16 +18,20 @@ public :
 	{
 		cout << " Connected To Server" << endl;
 
-		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-		sendBuffer->CopyData(sendData, sizeof(sendData));
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+		sendBuffer->Close(sizeof(sendData));
+		
 		Send(sendBuffer);
 	}
 	virtual int32	OnRecv(BYTE* buffer, int32 len) override 
 	{ 
 		cout << "On Recv Len = " << len << endl;
 		this_thread::sleep_for(1s);
-		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-		sendBuffer->CopyData(sendData, sizeof(sendData));
+		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+		sendBuffer->Close(sizeof(sendData));
+
 		Send(sendBuffer);
 		return len; 
 	}
@@ -43,7 +47,7 @@ public :
 
 int main()
 {
-	this_thread::sleep_for(1s);
+	this_thread::sleep_for(1ms);
 
 	ClientServiceRef service = MakeShared<ClientService>(
 		NetAddress(L"127.0.0.1", 7777),

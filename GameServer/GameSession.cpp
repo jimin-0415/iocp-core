@@ -16,8 +16,12 @@ int32 GameSession::OnRecv(BYTE* buffer, int32 len)
 {
     cout << "OnRecv Len = " << len << endl;
 
-    SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-    sendBuffer->CopyData(buffer, len);
+    //미리 보낼 바이트를 예측하지 못할때가 생김. 그래서 데이터 크게 잡음
+    //그래서 데이터를 보낼때 1byte만 보낼때도 4096을 잡는다.
+    //SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
+    SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+    ::memcpy(sendBuffer->Buffer(), buffer, len);
+    sendBuffer->Close(len);
 
     GSessionManager.BroadCast(sendBuffer);
     return len;
