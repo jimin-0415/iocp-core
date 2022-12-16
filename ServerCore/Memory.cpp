@@ -69,13 +69,18 @@ void* Memory::Allocate(int32 size)
 void Memory::Release(void* ptr)
 {
 	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
+
+	const int32 allocSize = header->allocSize;
+	ASSERT_CRASH(allocSize > 0);
+
 #ifdef _STOMP
 	StompAllocator::Release(header);
 #else
-	const int32 allocSize = header->allocSize;
-	
+
 	if (allocSize > MAX_ALLOC_SIZE) {
-		::_aligned_free(ptr);
+		//Header를 삭제해야하는 실수로 ptr 실제 주소 위치를 삭제,
+		//invalid - allocation - alignment 오류 발생
+		::_aligned_free(header);
 	}
 	else {
 		//메모리 풀에 반납

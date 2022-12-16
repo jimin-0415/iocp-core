@@ -37,10 +37,3 @@
 /// Memory
 ///
 
-#ifdef _DEBUG
-#define XAlloc(size) PoolAllocator::Alloc(size)
-#define XRelease(ptr) PoolAllocator::Release(ptr)
-#else
-#define XAlloc(size) PoolAllocator::Alloc(size)
-#define XRelease(ptr) PoolAllocator::Release(ptr)
-#endif
