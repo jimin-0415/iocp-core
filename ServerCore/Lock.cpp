@@ -9,7 +9,7 @@ void Lock::WriteLock(const char* name)
 #endif
 
 	//동일 쓰레드일 경우 WriteLock성공
-	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK);
+	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId) {
 		_writeCount++;
 		return;
