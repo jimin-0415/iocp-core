@@ -22,7 +22,10 @@ private:
 private:
 	unordered_map<const char*, int32>	_nameToId;	//생성된 Lock 개수
 	unordered_map<int32, const char*>	_idToName;
-	stack<int32>						_lockStack;		//Lock을 했는지 안했는지 추적을 위해서 <- 추후 개별 TSL 메모리로 옮겨야 합니다
+
+
+	// 0 -> 1 -> 2
+	// 3 -> 1 -> 5  각 개별 락 스택이 다른데 해당 부분 빼지 않았음. TLS로 뺴면됨
 	map<int32, set<int32>>				_lockHistory;	//그래프의 간선 집합 1번락을 잡고 4번 락을 작을려고 할때, 한번도 해당 Lock에 대해서 검증을 하지 않았다면 cycle 검증
 
 	Mutex _lock;
