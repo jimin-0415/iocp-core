@@ -7,7 +7,7 @@ using namespace std;
 
 char sendData[] = "Hello World";
 
-class DummySession : public Session {
+class DummySession : public PacketSession {
 public :
 	~DummySession() {
 		cout << "~DummySession" << endl;
@@ -16,23 +16,24 @@ public :
 	//Override Function To Contents 
 	virtual void OnConnected() override 
 	{
-		cout << " Connected To Server" << endl;
+		//cout << " Connected To Server" << endl;
 
-		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+		/*SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
 		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
 		sendBuffer->Close(sizeof(sendData));
 		
-		Send(sendBuffer);
+		Send(sendBuffer);*/
 	}
-	virtual int32	OnRecv(BYTE* buffer, int32 len) override 
+	virtual int32	OnRecvPacket(BYTE* buffer, int32 len) override 
 	{ 
-		cout << "On Recv Len = " << len << endl;
-		this_thread::sleep_for(1s);
-		SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-		::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
-		sendBuffer->Close(sizeof(sendData));
+		PacketHeader header = *((PacketHeader*)buffer);
+		cout << "Packet ID : " << header.id << "Size : " << header.size << endl;
 
-		Send(sendBuffer);
+		char recvBuffer[4096];
+		::memcpy(recvBuffer, &buffer[4], header.size - sizeof(PacketHeader));
+
+		cout << recvBuffer << endl;
+
 		return len; 
 	}
 	virtual void OnSend(int32 len)override 
@@ -53,7 +54,7 @@ int main()
 		NetAddress(L"127.0.0.1", 7777),
 		MakeShared<IocpCore>(),
 		MakeShared<DummySession>,
-		5);	//DummyClinet 5개.
+		1000);	//DummyClinet 5개.
 	
 	ASSERT_CRASH(service->Start());
 

@@ -29,6 +29,8 @@ using ServerServiceRef = std::shared_ptr<class ServerService>;
 using ClientServiceRef = std::shared_ptr<class ClientService>;
 using SendBufferRef = std::shared_ptr<class SendBuffer>;
 using SendBufferChunkRef = std::shared_ptr<class SendBufferChunk>;
+using PacketSessionRef = std::shared_ptr<class PacketSession>;
+
 #define size16(val) static_cast<int16>(sizeof(val))
 #define size32(val) static_cast<int32>(sizeof(val))
 #define len16(arr)	static_cast<int16>(sizeof(arr)/sizeof(arr[0]))

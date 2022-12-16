@@ -16,20 +16,25 @@ Session::~Session()
 
 void Session::Send(SendBufferRef sendBuffer)
 {
+    //WriteLock으로 걸게되면 좀 비효율 적인
+    if (IsConnected() == false)
+        return;
+
+    bool registerSend = false;
+
     //현재 RegisterSend가 걸리지 않았다면 건다.
-    //만약 IOCP로부터 Send의 호출이 안올경우 계속 Queue에 쌓이게된다.
-    WRITE_LOCK;
-    _sendQueue.push(sendBuffer);
-    
-    /*if (_sendRegistered == false) {
-        _sendRegistered = true;
-        RegisterSend();
-    }*/
-    if (_sendRegistered.exchange(true) == false) {
-        //Send할경우 계속적으로 보내는것보다 Recv처럼 WSASend가 끝나서 통지를 받아서 순차저긍로 하는것이 좀더 성능상 이점이있다.
-        //System Call 횟수가 줌.
-        RegisterSend();
+    {
+        WRITE_LOCK;
+        _sendQueue.push(sendBuffer);
+        if (_sendRegistered.exchange(true) == false) {
+            //Send할경우 계속적으로 보내는것보다 Recv처럼 WSASend가 끝나서 통지를 받아서 순차저긍로 하는것이 좀더 성능상 이점이있다.
+            //System Call 횟수가 줌.
+            registerSend = true;
+        }
     }
+
+    if (registerSend)
+        RegisterSend();
 }
 
 bool Session::Connect()
@@ -44,10 +49,6 @@ void Session::Disconnect(const WCHAR* cause)
         return;
 
     cout << "Disconnect: " << cause << endl;
-
-    //Contents 단 Override
-    OnDisconnected();
-    GetService()->ReleaseSession(GetSessionRef());
 
     RegisterDisConnect();
 }
@@ -234,6 +235,11 @@ void Session::ProcessDisconnect()
 {
     //할게 없다.
     _disConnectEvent.owner = nullptr; //release ref Owner;
+
+    //Contents 단 Override
+    OnDisconnected();
+    GetService()->ReleaseSession(GetSessionRef());
+
 }
 
 void Session::ProcessRecv(int32 numOfBytes)
@@ -306,4 +312,43 @@ void Session::HandleError(int32 errorCode)
 
 void Session::OnConnected()
 {
+}
+
+PacketSession::PacketSession()
+{
+}
+
+PacketSession::~PacketSession()
+{
+}
+
+//[size][id][data...  ] [size][id][data...]
+int32 PacketSession::OnRecv(BYTE* buffer, int32 len)
+{
+    int32 processLen = 0;
+    while (true) {
+        //일반적인 데이터 사이즈
+        int32 dataSize = len - processLen;
+        //최소한 PacketHeader 파싱 가능한가?
+
+        if (dataSize < sizeof(PacketHeader))
+            break;
+
+        PacketHeader header = *(reinterpret_cast<PacketHeader*>(&buffer[processLen]));
+        
+        //Header에 기록된 패킷 크기 파싱 가능한가 ?
+        if (dataSize < header.size)
+            break;
+        
+        //패킷 조립 가능
+        OnRecvPacket(&buffer[0], header.size);
+        processLen += header.size;
+    }
+
+    return processLen;
+}
+
+int32 PacketSession::OnRecvPacket(BYTE* buffer, int32 len)
+{
+    return int32();
 }

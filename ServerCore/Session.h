@@ -97,3 +97,37 @@ private:
 	DisConnectEvent _disConnectEvent;
 };
 
+///
+/// PacketSession 
+/// 받는곳과 관련있다.
+/// OnRecv를 통해서 현재 얼마큼 받았는지 Length 값을 내보내고 있다 [어디까지 처리햇는지에 대한 정보]
+/// 만약 Packet이 많이 몰리게 될 경우 TCP 특성상 , 내쪽에서 보내는 모든 패킷이 한번에 보내지지 않는다, 데이터바운드가 없음, 100byte만 보내면 20byte씩 쪼개질 수 있다.
+/// 어떤 식으로든 모든 데이터가 전송됬는지 확인하는게 필요하다.
+/// 1. 방법 : 특수 문자열로 하면 되지 않을까 ? - 만약 다른 문자열이 겹쳐버리면 문제가 생김.
+/// 2. PacketHeader 를 만들어서 정보를 넘겨준다.
+/// 
+
+//   header
+//[size][id][data...  ]
+struct PacketHeader 
+{
+	uint16 size;	//String 같은 가변 데이터를 보내야한다, 혹은 동적배열.	
+	uint16 id;	//ProtocolID -> 1. Login , 2.이동 요청
+};
+
+class PacketSession : public Session
+{
+public:
+	PacketSession();
+	virtual ~PacketSession();
+
+	
+	PacketSessionRef GetPacketSessionRef() { return static_pointer_cast<PacketSession>(shared_from_this()); }
+
+protected:
+	virtual int32	OnRecv(BYTE* buffer, int32 len) sealed;	//PacketSession을 상속받은 애들은 해당 함수 사용 못함.
+	virtual int32	OnRecvPacket(BYTE* buffer, int32 len) abstract;
+
+
+};
+
