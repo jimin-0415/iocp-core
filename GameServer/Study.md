@@ -1090,3 +1090,8 @@ sendEvent->buffer.resize(len);
 
 수신버퍼와 송신버퍼의 차이점에 대해서 알고있어야 한다.
 선택하는 정책이 다름.
+
+##BufferHelpers 를 통해서 Packet 관리를 진행한다.
+후에 GoogleProtoBuf 사용한다.
+
+현재는 Buff를 가져와서 직접 세팅해준다. 그렇게 하면 실수할 여지가 많다.

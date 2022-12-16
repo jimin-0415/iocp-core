@@ -4,15 +4,15 @@ class SendBufferChunk;
 /// <summary>
 /// Send Buffer
 /// </summary>
-/// SendBuffer 도 RefCount 대상
-class SendBuffer : public enable_shared_from_this<SendBuffer>
+class SendBuffer 
 {
 public:
-	SendBuffer(SendBufferChunkRef owner, BYTE* buffer, int32 allocSize);
+	SendBuffer(SendBufferChunkRef owner, BYTE* buffer, uint32 allocSize);
 	~SendBuffer();
 
 	BYTE* Buffer() { return _buffer; }
-	int32 WriteSize() { return _writeSize; }
+	uint32 AllocSize() { return _allocSize; }
+	uint32 WriteSize() { return _writeSize; }
 	void Close(uint32 writeSize);
 
 private:
@@ -32,7 +32,7 @@ private:
 class SendBufferChunk : public enable_shared_from_this<SendBufferChunk> 
 {
 	enum {
-		SEND_BUFFER_CHUNK_SIZE = 10000,
+		SEND_BUFFER_CHUNK_SIZE = 1000000,
 	};
 
 public:

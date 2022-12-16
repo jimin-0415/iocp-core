@@ -3,6 +3,7 @@
 #include "Service.h"
 #include "Session.h"
 #include "ThreadManager.h"
+#include "BufferReader.h"
 using namespace std;
 
 char sendData[] = "Hello World";
@@ -26,12 +27,20 @@ public :
 	}
 	virtual int32	OnRecvPacket(BYTE* buffer, int32 len) override 
 	{ 
-		PacketHeader header = *((PacketHeader*)buffer);
-		cout << "Packet ID : " << header.id << "Size : " << header.size << endl;
+		BufferReader br(buffer, len);
+		PacketHeader header;
+		br >> header;
+
+		uint64 id;
+		uint32 hp;
+		uint16 attack;
+		br >> id >> hp >> attack;
+
+		cout << "ID : " << id << " HP : " << hp << " Attack :" << attack << endl;
 
 		char recvBuffer[4096];
-		::memcpy(recvBuffer, &buffer[4], header.size - sizeof(PacketHeader));
-
+		//현재는 길이를 이렇게 보내지만 가변길이의 경우 가변길이의 Packet Size를 추가로 보내주면 된다. 일단은 임시로 
+		br.Read(recvBuffer, header.size - sizeof(PacketHeader) - sizeof(uint64) - sizeof(uint32) - sizeof(uint16));
 		cout << recvBuffer << endl;
 
 		return len; 
@@ -54,11 +63,11 @@ int main()
 		NetAddress(L"127.0.0.1", 7777),
 		MakeShared<IocpCore>(),
 		MakeShared<DummySession>,
-		1000);	//DummyClinet 5개.
+		500);	//DummyClinet 5개.
 	
 	ASSERT_CRASH(service->Start());
 
-	for (int32 i = 0; i < 2; i++) {
+	for (int32 i = 0; i < 5; i++) {
 		GThreadManager->Launch([=]() {
 			while (true) {
 				service->GetIocpCore()->Dispatch();
