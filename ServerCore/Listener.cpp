@@ -81,7 +81,7 @@ void Listener::RegisterAccept(AcceptEvent* acceptEvent)
 	DWORD bytesReceived = 0;
 
 	//당장 실행은 안되지만, Pending상태가 되면 iocp로 부터 오게된다, Listener 소켓을 iocp에 등록했기 때문.
-	if (false == SocketUtils::AcceptEx(_socket, session->GetSocket(), session->_recvBuffer, 0,
+	if (false == SocketUtils::AcceptEx(_socket, session->GetSocket(), session->_recvBuffer.WritePos(), 0,
 		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, OUT & bytesReceived, static_cast<LPOVERLAPPED>(acceptEvent))) {
 		const int32 errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING) // Pending 아닐경우.

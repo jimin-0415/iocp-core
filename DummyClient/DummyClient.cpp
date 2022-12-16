@@ -27,7 +27,7 @@ public :
 		Send((BYTE*)sendBuffer, sizeof(sendBuffer));
 		return len; 
 	}
-	virtual void	OnSend(int32 len)override 
+	virtual void OnSend(int32 len)override 
 	{
 		cout << "OnSend Len = " << len << endl;
 	}

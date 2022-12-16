@@ -4,6 +4,7 @@
 #include "Service.h"
 
 Session::Session()
+    :_recvBuffer(BUFFER_SIZE)
 {
     _socket = SocketUtils::CreateSocket();
 }
@@ -146,11 +147,14 @@ void Session::RegisterRecv()
     _recvEvent.Init();
     _recvEvent.owner = shared_from_this();  //레퍼런트 카운트 1 증가.
 
+    //TCP는 바운더리 개념이 없기 때문에 .짤려서 넘겨올 수 있다. 패킷을 모두 받아야 처리가 가능하다.
     WSABUF wsaBuf;
-    wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer);
-    wsaBuf.len = len32(_recvBuffer);
 
-    DWORD numOfBytes = 0;
+    //Write Pos 위치에 기록한다.
+    wsaBuf.buf = reinterpret_cast<char*>(_recvBuffer.WritePos());
+    wsaBuf.len = _recvBuffer.FreeSize();   //최대 버퍼보다 크게 잡는다.
+
+    DWORD numOfBytes = 0;   //수신버퍼에서 받아온 실제 사이즈
     DWORD flags = 0;
 
     if (SOCKET_ERROR == ::WSARecv(_socket, &wsaBuf, 1, OUT &numOfBytes, OUT &flags, &_recvEvent, nullptr)) {
@@ -216,8 +220,24 @@ void Session::ProcessRecv(int32 numOfBytes)
         return;
     }
 
-    //Contents Override
-    OnRecv(_recvBuffer, numOfBytes);
+    //Write Pos을 numOfBytes만큼 땡긴다
+    if (_recvBuffer.OnWrite(numOfBytes) == false) {
+        Disconnect(L"OnWrite OverFlow");
+    }
+
+    int32 dataSize = _recvBuffer.DataSize();
+    
+    //Contents Override <- 이만큼 읽었다는것을 컨텐츠에 넘겨서 처리를 시킨다.
+    //처리 개수를 받는다.
+    int32 processLen = OnRecv(_recvBuffer.ReadPos(), numOfBytes);
+    //ReadCur앞으로 땡기기.
+    if (processLen < 0 || dataSize < processLen || _recvBuffer.OnRead(processLen) == false) {
+        Disconnect(L"OnRead OverFlow");
+        return;
+    }
+
+    //커서 정리. 초기화 여부 확인
+    _recvBuffer.Clean();
 
     //수신 등록
     RegisterRecv();

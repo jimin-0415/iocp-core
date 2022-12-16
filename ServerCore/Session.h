@@ -2,7 +2,7 @@
 #include "IocpCore.h"
 #include "IocpEvent.h"
 #include "NetAddress.h"
-
+#include "RecvBuffer.h"
 class Service;
 
 /// <summary>
@@ -16,6 +16,11 @@ class Session : public IocpObject
 	friend class Listener;
 	friend class IocpCore;
 	friend class Service;
+	
+	enum {
+		BUFFER_SIZE = 0x10000, //64kb
+	};
+
 public:
 	Session();
 	virtual ~Session();
@@ -64,7 +69,9 @@ protected:
 
 public:
 	//Temp
-	BYTE _recvBuffer[1000];
+	//Recv 의 경우는 멀티 쓰레드 환경을 고려하지 않아도 된다.
+	//1. 한번 요청하면 하나의 쓰레드가 recv 에 대한 처리를 하기 때문에
+	
 
 private:
 	//내부에서 서비스에 대한 정보를 알아야 한다.
@@ -75,9 +82,8 @@ private:
 
 private:
 	USE_LOCK;
-
-	//수신 기능
-
+	//수신 버퍼
+	RecvBuffer	_recvBuffer;
 	//송신 기능
 
 private:
