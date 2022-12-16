@@ -1076,3 +1076,17 @@ SELECT 모델 = (select 함수가 핵심이 된다)
 //IOCP 에 IocpObject에 데이터 오염이 발생할 수 있다.
 -> IocpObject 를 refcounting 한다. -> 그렇게 되면, 이중 shared되게 되면 문제가 생긴다.
 iocp Event에 나를 걸어준 객체를 알고있다.
+
+
+## SendBuffer 문제
+
+현재는 Echo 서버를 만들어서 보내고 있고 Event가 Send를 물고있게 했다.
+지속적으로 복사 비용이 든다. 1명에게 Send를 보낼때도 있겠지만, 주변 사람들에게 특정 정보를 모두 보낼 경우생김
+ex -> 몬스터 죽음 -> 주위 100명에게 보냄.
+
+SendEvent* sendEvent = xnew<SendEvent>();
+sendEvent->buffer.resize(len);
+::memcpy(sendEvent->buffer.data(), buffer, len); //복사 비용 100번 발생
+
+수신버퍼와 송신버퍼의 차이점에 대해서 알고있어야 한다.
+선택하는 정책이 다름.

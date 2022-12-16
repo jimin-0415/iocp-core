@@ -26,7 +26,7 @@ public:
 	virtual ~Session();
 
 public:
-	void	Send(BYTE* buffer, int32 len);
+	void    Send(SendBufferRef sendBuffer);
 	bool	Connect();
 	void	Disconnect(const WCHAR* cause);	//해킹 의심 , 상대방 연결 끊킴
 
@@ -51,12 +51,12 @@ private:
 	bool	RegisterConnect();
 	bool	RegisterDisConnect();
 	void	RegisterRecv();
-	void	RegisterSend(SendEvent* sendEvent);
+	void	RegisterSend();
 
 	void	ProcessConnect();
 	void	ProcessDisconnect();
 	void	ProcessRecv(int32 numOfBytes);
-	void	ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
+	void	ProcessSend(int32 numOfBytes);
 
 	void	HandleError(int32 errorCode);
 
@@ -84,12 +84,14 @@ private:
 	USE_LOCK;
 	//수신 버퍼
 	RecvBuffer	_recvBuffer;
-	//송신 기능
-
+	//송신 버퍼
+	//Regist Send를 실행중이라서 WSA Send를 할 수 없다면 Queeu에 넣는다.
+	Queue<SendBufferRef> _sendQueue;
+	Atomic<bool>		_sendRegistered = false;
 private:
 	//IocpEvent 재사용..
 	RecvEvent	_recvEvent;
-
+	SendEvent	_sendEvent;
 	//IOCPEvent 재사용.. ServerType::Client 에서 사용
 	ConnectEvent _connectEvent;
 	DisConnectEvent _disConnectEvent;

@@ -8,29 +8,9 @@
 #include "ThreadManager.h"
 #include "PlayerManager.h"
 #include "AccountManager.h"
-
+#include "CoreGlobal.h"
 #include "Service.h"
-#include "Session.h"
-
-
-class GameSession : public Session
-{
-public:
-    ~GameSession() {
-        cout << "~GameSession" << endl;
-    }
-
-    virtual int32 OnRecv(BYTE* buffer, int32 len) override
-    {
-        cout << "OnRecv Len = " << len << endl;
-        Send(buffer, len);
-        return len;
-    }
-
-    virtual void OnSend(int32 len) override {
-        cout << "OnSend Len " << len << endl;
-    }
-};
+#include "GameSession.h"
 
 int main()
 {
@@ -42,13 +22,15 @@ int main()
     
     ASSERT_CRASH(service->Start());
 
-    for (int32 i = 0; i < 5; i++) {
+    for (int32 i = 0; i < 1; i++) {
         GThreadManager->Launch([=]() {
             while (true) {
                 service->GetIocpCore()->Dispatch();
             }
             });
     }
+
+    GThreadManager->Join();
     return 0;
 }
 

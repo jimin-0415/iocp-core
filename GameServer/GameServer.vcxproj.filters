@@ -17,6 +17,8 @@
     </ClCompile>
     <ClCompile Include="AccountManager.cpp" />
     <ClCompile Include="PlayerManager.cpp" />
+    <ClCompile Include="GameSessionManager.cpp" />
+    <ClCompile Include="GameSession.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -24,6 +26,8 @@
     </ClInclude>
     <ClInclude Include="AccountManager.h" />
     <ClInclude Include="PlayerManager.h" />
+    <ClInclude Include="GameSessionManager.h" />
+    <ClInclude Include="GameSession.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Study.md" />

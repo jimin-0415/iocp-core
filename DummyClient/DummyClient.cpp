@@ -5,7 +5,7 @@
 #include "ThreadManager.h"
 using namespace std;
 
-char sendBuffer[] = "Hello World";
+char sendData[] = "Hello World";
 
 class DummySession : public Session {
 public :
@@ -17,14 +17,18 @@ public :
 	virtual void OnConnected() override 
 	{
 		cout << " Connected To Server" << endl;
-		Send((BYTE*)sendBuffer, sizeof(sendBuffer));
-		
+
+		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
+		sendBuffer->CopyData(sendData, sizeof(sendData));
+		Send(sendBuffer);
 	}
 	virtual int32	OnRecv(BYTE* buffer, int32 len) override 
 	{ 
 		cout << "On Recv Len = " << len << endl;
 		this_thread::sleep_for(1s);
-		Send((BYTE*)sendBuffer, sizeof(sendBuffer));
+		SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
+		sendBuffer->CopyData(sendData, sizeof(sendData));
+		Send(sendBuffer);
 		return len; 
 	}
 	virtual void OnSend(int32 len)override 
@@ -45,7 +49,7 @@ int main()
 		NetAddress(L"127.0.0.1", 7777),
 		MakeShared<IocpCore>(),
 		MakeShared<DummySession>,
-		1);	//DummyClinet 1개.
+		5);	//DummyClinet 5개.
 	
 	ASSERT_CRASH(service->Start());
 
@@ -56,6 +60,8 @@ int main()
 			}
 			});
 	}
+
+	GThreadManager->Join();
 	return 0;
 }
 

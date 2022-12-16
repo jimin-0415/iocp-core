@@ -93,6 +93,5 @@ public:
 
 	}
 public:
-	vector<BYTE> buffer;
-	//TODO. 인자가 추가로 있을수도 없을 수 있다.
+	vector<SendBufferRef> sendBuffers;
 };
