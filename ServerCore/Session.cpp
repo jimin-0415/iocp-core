@@ -348,7 +348,7 @@ int32 PacketSession::OnRecv(BYTE* buffer, int32 len)
     return processLen;
 }
 
-int32 PacketSession::OnRecvPacket(BYTE* buffer, int32 len)
+void PacketSession::OnRecvPacket(BYTE* buffer, int32 len)
 {
-    return int32();
+    return;
 }

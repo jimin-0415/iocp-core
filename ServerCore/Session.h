@@ -126,7 +126,7 @@ public:
 
 protected:
 	virtual int32	OnRecv(BYTE* buffer, int32 len) sealed;	//PacketSession을 상속받은 애들은 해당 함수 사용 못함.
-	virtual int32	OnRecvPacket(BYTE* buffer, int32 len) abstract;
+	virtual void OnRecvPacket(BYTE* buffer, int32 len) abstract;
 
 
 };

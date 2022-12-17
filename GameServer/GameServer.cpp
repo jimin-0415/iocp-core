@@ -6,13 +6,12 @@
 #include <atomic>
 #include <chrono>
 #include "ThreadManager.h"
-#include "PlayerManager.h"
-#include "AccountManager.h"
 #include "CoreGlobal.h"
 #include "Service.h"
 #include "GameSession.h"
 #include "GameSessionManager.h"
 #include "BufferWriter.h"
+#include "ServerPacketHandler.h"
 int main()
 {
     ServerServiceRef service = MakeShared<ServerService>(
@@ -33,26 +32,19 @@ int main()
 
     char SendData[1000] = "Hello World!!!!!";
 
+    //공통 부분은 함수로 관리하자.
     while (true) {
-        SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-
-        BufferWriter bw(sendBuffer->Buffer(), 4096);
-        PacketHeader* header = bw.Reserve<PacketHeader>(); //PacketHeader 예약
-        
+        vector<BuffData> buffDatas{
+            BuffData { 100, 1.5f },
+            BuffData { 200, 1234.f },
+            BuffData { 300, 99.f },
+        };
         uint64 id = 1000;
         uint32 hp = 234;
         uint16 attack = 23;
-
-        //성능향상을 위해서 굳이 길이까지 체크 안함 .
-        bw << uint64(1000) << uint32(23) << uint16(444);
-       
-        bw.Write(SendData, sizeof(SendData));
-
-        header->size = bw.WriteSize();
-        header->id = 1; //packet Id
         
-        sendBuffer->Close(bw.WriteSize());
-        
+        SendBufferRef sendBuffer = ServerPacketHandler::Make_CTS_TEST(id, hp, attack, buffDatas);
+            
         GSessionManager.BroadCast(sendBuffer);
 
         this_thread::sleep_for(200ms);
