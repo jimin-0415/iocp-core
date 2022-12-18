@@ -82,16 +82,21 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 };
 
 const char descriptor_table_protodef_Protocol_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\016Protocol.proto\022\010Protocol\"\?\n\010BuffData\022\016"
-  "\n\006buffId\030\001 \001(\004\022\022\n\nremainTime\030\002 \001(\002\022\017\n\007vi"
-  "ctims\030\003 \003(\004\"S\n\006S_TEST\022\n\n\002id\030\001 \001(\004\022\n\n\002hp\030"
-  "\002 \001(\r\022\016\n\006attack\030\003 \001(\r\022!\n\005buffs\030\004 \003(\0132\022.P"
-  "rotocol.BuffDatab\006proto3"
+  "\n\016Protocol.proto\022\010Protocol\032\nEnum.proto\032\014"
+  "Struct.proto\"\?\n\010BuffData\022\016\n\006buffId\030\001 \001(\004"
+  "\022\022\n\nremainTime\030\002 \001(\002\022\017\n\007victims\030\003 \003(\004\"S\n"
+  "\006S_TEST\022\n\n\002id\030\001 \001(\004\022\n\n\002hp\030\002 \001(\r\022\016\n\006attac"
+  "k\030\003 \001(\r\022!\n\005buffs\030\004 \003(\0132\022.Protocol.BuffDa"
+  "tab\006proto3"
   ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_Protocol_2eproto_deps[2] = {
+  &::descriptor_table_Enum_2eproto,
+  &::descriptor_table_Struct_2eproto,
+};
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Protocol_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Protocol_2eproto = {
-  false, false, 184, descriptor_table_protodef_Protocol_2eproto, "Protocol.proto", 
-  &descriptor_table_Protocol_2eproto_once, nullptr, 0, 2,
+  false, false, 210, descriptor_table_protodef_Protocol_2eproto, "Protocol.proto", 
+  &descriptor_table_Protocol_2eproto_once, descriptor_table_Protocol_2eproto_deps, 2, 2,
   schemas, file_default_instances, TableStruct_Protocol_2eproto::offsets,
   file_level_metadata_Protocol_2eproto, file_level_enum_descriptors_Protocol_2eproto, file_level_service_descriptors_Protocol_2eproto,
 };
