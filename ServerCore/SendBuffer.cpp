@@ -73,12 +73,12 @@ SendBufferChunk::SendBufferChunk()
 
 SendBufferChunk::~SendBufferChunk()
 {
-	_open = false;
-	_usedSize = 0;
 }
 
 void SendBufferChunk::Reset()
 {
+	_open = false;
+	_usedSize = 0;
 }
 
 //어디부터 사용하냐
