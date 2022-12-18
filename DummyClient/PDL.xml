@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PDL>
+	<Packet name ="CTS_TEST" desc ="테스트 용도">
+		<Field name ="id" type ="uint64" desc=""/>
+		<Field name ="hp" type ="uint32" desc=""/>
+		<Field name ="attack" type ="uint16" desc=""/>
+		<List name ="buffs" desc="">
+			<Field name ="buffId" type ="uint64" desc=""/>
+			<Field name ="remainTime" type ="float" desc=""/>
+		</List>
+	</Packet>
+</PDL>

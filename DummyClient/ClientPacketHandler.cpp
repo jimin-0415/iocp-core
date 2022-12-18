@@ -19,46 +19,42 @@ void ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len)
 
 void ClientPacketHandler::Handle_CTS_TEST(BYTE* buffer, int32 len)
 {
+	//size 를 어떻게 걸를것이냐? 딱히 방법이 없다. 그럼 보안은 어떻게 할건데?
+	//어떻게 할것이냐 >> 에서 넣을떄 Read할떄 , 계쏙 true false를 반환해서 검증하느것처럼
+	//데이터가 가능한건지 체크를 하면 문제는 우아한 방법은 아니다, 이렇게 데이터 밀어넣고 파싱하면 온라인 게임에서 주로 일어난다.
+	//데이터 추출할떄마다.. 검증하는건 별루다.
+
+	//직렬화의 여러 기법에 대해서.
+
 	BufferReader br(buffer, len);
-	PacketHeader header;
-	br >> header;
 
-	uint64 id;
-	uint32 hp;
-	uint16 attack;
-	br >> id >> hp >> attack;
+	//if (len < sizeof(PKT_S_TEST))
+	//	return;
 
-	cout << "ID : " << id << " HP : " << hp << " Attack :" << attack << endl;
+	PKT_S_TEST* pkt = reinterpret_cast<PKT_S_TEST*>(buffer); 
+	//해당 주소를 그냥 꺼내 쓴다. 현재 4byte는 안전하지만 다음 영역은 정상적인 데이터인지 모른다.
+	//복사보단 캐스팅으로 버퍼를 바로 사용
 
-	//가변 길이기 때문에, 클라이언트는 절대 믿으면 안된다.
-	vector<BuffData> buffDatas;
-	uint16 buffCount;
-	br >> buffCount;
+	if (pkt->Validate() == false)
+		return;
 
-	buffDatas.resize(buffCount);
-	for (int32 i = 0; i < buffCount; i++) {
-		br >> buffDatas[i].buffId >> buffDatas[i].remianTime;
+	//가변 데이터도 바로 접근함
+	//복사해서 꺼내쓸 필요 없어진다.
+	PKT_S_TEST::BuffList buffs = pkt->GetBuffsList();
+
+	cout << "BuffCount " << buffs.Count() << endl;
+	for (int32 i = 0; i < buffs.Count(); i++) {
+		cout << "BuffInfo : " << buffs[i].buffId << "  RemainTime : " << buffs[i].remianTime << endl;
+	}
+	// begin end iterator
+	for (auto it = buffs.begin(); it != buffs.end(); ++it) {
+		cout << "BuffInfo : " << it->buffId << "  RemainTime : " << it->remianTime << endl;
 	}
 
-	cout << "BuffCount " << buffCount << endl;
-	for (int32 i = 0; i < buffCount; i++) {
-		cout << "BuffInfo : " << buffDatas[i].buffId << "  RemainTime : " << buffDatas[i].remianTime << endl;
+	//range for 문법
+	for (auto buff : buffs) {
+		cout << "BuffInfo : " << buff.buffId << "  RemainTime : " << buff.remianTime << endl;
 	}
-	//char recvBuffer[4096];
-	////현재는 길이를 이렇게 보내지만 가변길이의 경우 가변길이의 Packet Size를 추가로 보내주면 된다. 일단은 임시로 
-	////Protoocl 규약에 맞춰서 순서대로 패킷 정보를 넣어준다.
-	//br.Read(recvBuffer, header.size - sizeof(PacketHeader) - sizeof(uint64) - sizeof(uint32) - sizeof(uint16));
-	//cout << recvBuffer << endl;
 
-	wstring name;
-	uint16 nameLen;
-
-	br >> nameLen;
-	name.resize(nameLen);
-
-	br.Read((void*)name.data(), nameLen * sizeof(WCHAR));
-
-	wcout.imbue(std::locale("kor"));
-	wcout << name << endl;
 
 }

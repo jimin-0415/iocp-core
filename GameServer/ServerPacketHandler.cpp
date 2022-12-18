@@ -26,15 +26,20 @@ SendBufferRef ServerPacketHandler::Make_CTS_TEST(uint64 id, uint32 hp, uint16 at
 	
     bw << id << hp << attack;
 
-	//가변데이터 들어감 int 형 까지 보낼 필요 없음
-	bw << (uint16)buffDatas.size();
+	struct ListHeader
+	{
+		uint16 offset;
+		uint16 count;
+	};
+
+	//가변데이터 
+	ListHeader* buffersHeader = bw.Reserve<ListHeader>();
+	buffersHeader->count = buffDatas.size();
+	buffersHeader->offset = bw.WriteSize();	//시작위치
 
 	for (BuffData& buff : buffDatas) {
 		bw << buff.buffId << buff.remianTime;
 	}
-
-	bw << (uint16)name.size();
-	bw.Write((void*)name.data(), name.size() * sizeof(WCHAR));
 
     header->size = bw.WriteSize();
     header->id = C_T_S_TEST; //packet Id

@@ -27,4 +27,9 @@
       <Filter>Main</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="PDL.xml">
+      <Filter>Main</Filter>
+    </Xml>
+  </ItemGroup>
 </Project>

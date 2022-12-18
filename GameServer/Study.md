@@ -1139,3 +1139,23 @@ MBCS Multi byte Charcter Wet
 WBCS (Wide byte Character Set)
 - wchar 
 - 유니코드 기반의 character Set (Windows 기준 = UTF-16)
+
+Packet Definition List
+
+## Packet 직렬화 
+1. 패킷을 바이트로 쪼개는방식.
+
+생각할점 -> 보안 문제
+1. 가변일 경우 계속 검증도 가능하다 . 하지만 계속적으로 검증해야함.
+구조체는 가장 큰 녀석 기준으로 정렬함 . -> 64BIT 환경은 8BYTE 기준으로 계산이 가장 빠름
+
+//[ PKT_S_TEST 고정사이즈 ][ 가변데이터 BuffListItem BuffListItem BuffListItem ...  ]
+고정사이즈는 앞에, 가변사이즈는 뒤로 빼서 넣는다.
+가변데이터는 데이터 시작 offset과 개수를 가지고 있는다. 가변데이터가 몇개 된다 하더라도 validation 개수를 검증한다.
+안전하게 꺼내 쓸 수 있다.
+
+## 직렬화 2
+우리가 데이터를 꺼내 쓰기 위해선 역 직렬화를 해야한다.
+현재는 임시객체를 만들어서 버퍼에 Write를 하는데, 그렇게 하지않고 바로 버퍼에 넣는방식에대해서 확인해본다.
+복사를 줄이고 메모리에 직접 접근해서, 성능적 이점을 얻게 된다.
+
