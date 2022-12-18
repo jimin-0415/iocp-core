@@ -134,9 +134,6 @@
     <ClInclude Include="TypeCast.h">
       <Filter>Memory</Filter>
     </ClInclude>
-    <ClInclude Include="SocketUtils.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="NetAddress.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -166,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="BufferWriter.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketUtils.h">
+      <Filter>Thread</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
