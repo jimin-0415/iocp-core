@@ -16,7 +16,7 @@ void ServerPacketHandler::HandlePacket(BYTE* buffer, int32 len)
 	}
 }
 
-SendBufferRef ServerPacketHandler::Make_CTS_TEST(uint64 id, uint32 hp, uint16 attack, vector<BuffData> buffDatas)
+SendBufferRef ServerPacketHandler::Make_CTS_TEST(uint64 id, uint32 hp, uint16 attack, vector<BuffData> buffDatas, wstring name)
 {
     SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
 
@@ -32,6 +32,9 @@ SendBufferRef ServerPacketHandler::Make_CTS_TEST(uint64 id, uint32 hp, uint16 at
 	for (BuffData& buff : buffDatas) {
 		bw << buff.buffId << buff.remianTime;
 	}
+
+	bw << (uint16)name.size();
+	bw.Write((void*)name.data(), name.size() * sizeof(WCHAR));
 
     header->size = bw.WriteSize();
     header->id = C_T_S_TEST; //packet Id

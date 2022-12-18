@@ -17,6 +17,7 @@ struct SCT_TEST {
 	//2. 그냥 바이트 배열 (ex : 길드 이미지)
 	//3. 그냥 일반적인 정보 리스트.
 	vector<BuffData> buffers;
+	wstring name;
 };
 
 //Client To Server Test

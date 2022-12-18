@@ -49,4 +49,16 @@ void ClientPacketHandler::Handle_CTS_TEST(BYTE* buffer, int32 len)
 	////Protoocl 규약에 맞춰서 순서대로 패킷 정보를 넣어준다.
 	//br.Read(recvBuffer, header.size - sizeof(PacketHeader) - sizeof(uint64) - sizeof(uint32) - sizeof(uint16));
 	//cout << recvBuffer << endl;
+
+	wstring name;
+	uint16 nameLen;
+
+	br >> nameLen;
+	name.resize(nameLen);
+
+	br.Read((void*)name.data(), nameLen * sizeof(WCHAR));
+
+	wcout.imbue(std::locale("kor"));
+	wcout << name << endl;
+
 }

@@ -17,7 +17,7 @@ public:
 	//모든 패킷을 관리한다.
 	static void HandlePacket(BYTE* buffer, int32 len);
 
-	static SendBufferRef Make_CTS_TEST(uint64 id, uint32 hp, uint16 attack, vector<BuffData> buffDatas);
+	static SendBufferRef Make_CTS_TEST(uint64 id, uint32 hp, uint16 attack, vector<BuffData> buffDatas, wstring name);
 
 	static void Handle_CTS_TEST(BYTE* buffer, int32 len);
 };

@@ -1103,3 +1103,39 @@ ClientPacketHandler : 클라이언트 에서 패킷을 핸들링 하는 클래�
 
 ## 문자열,
 -> 인코딩 이슈 있음
+
+유니코드 인코딩
+문자 .
+문자 집합 vs 인코딩
+CP949 vs UTF-8 vs UTF-16
+MBCS vs WBCS
+
+
+어떤 문자는 어떤 숫자를 의미한다 <- 문자 집합 [CHAR-SET]
+ks x 1001 <- 한국에서만 정의된 문자 집합. -> 문제점 : 각 나라별로 통신하려니 통신이 안됨.
+그래서 2BYTE 크기의 UniCode 생김
+
+인코딩은 -> 똑같은 데이터를 다른 형식으로 변환하는 방식.
+UTF-8 Encoding = Unicode 문자 집합 + 인코딩 방ㅅ기
+영문은 : 1바이트
+한글 : 3바이트
+-> 만약 첫 바이트의 맨 앞자리가 1byte로 바뀌면 뒷자리도 사용하겠다.
+-> 대부분의 경우는 1바이트 사용하게 됨. <- 영어만 쓴다면
+
+UTF-16 : Unicode 문자 집합 + 인코딩 방식
+BMP 까지는 2바이트 
+그다음 4바이트 
+영문 : 2바이트
+한글도 : 2바이트
+
+cp949 
+로마 : 1바이트 
+한글 : 2 바이트 
+
+MBCS Multi byte Charcter Wet
+- char  : 기본 캐릭터가 이거다
+- 개별 문자를 다수의 바이트로 표현한다.
+
+WBCS (Wide byte Character Set)
+- wchar 
+- 유니코드 기반의 character Set (Windows 기준 = UTF-16)

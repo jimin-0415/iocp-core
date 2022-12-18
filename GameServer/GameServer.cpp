@@ -12,6 +12,7 @@
 #include "GameSessionManager.h"
 #include "BufferWriter.h"
 #include "ServerPacketHandler.h"
+#include "tchar.h"
 int main()
 {
     ServerServiceRef service = MakeShared<ServerService>(
@@ -30,7 +31,10 @@ int main()
             });
     }
 
-    char SendData[1000] = "Hello World!!!!!";
+    char SendData[1000] = "Hello World!!!!!"; //CP949 (한글2바이트) + 로마 1바이트
+    char SendData2[1000] = u8"Hello World!!!!!"; //UTF-8 = unicode 한글3바이트 + 로마 1바이트
+    WCHAR SendData3[1000] = L"Hello World!!!!!"; //UTF-16 = Unicode (한글/로마 2바이트) -> 모두 2바이트라 좋다
+    TCHAR SendData4[1000] = _T("Hello World!!!!!"); //문자집합 속성에 따라서 달라짐, 기본 WCHAR
 
     //공통 부분은 함수로 관리하자.
     while (true) {
@@ -43,7 +47,7 @@ int main()
         uint32 hp = 234;
         uint16 attack = 23;
         
-        SendBufferRef sendBuffer = ServerPacketHandler::Make_CTS_TEST(id, hp, attack, buffDatas);
+        SendBufferRef sendBuffer = ServerPacketHandler::Make_CTS_TEST(id, hp, attack, buffDatas, L"안녕하세요");
             
         GSessionManager.BroadCast(sendBuffer);
 
