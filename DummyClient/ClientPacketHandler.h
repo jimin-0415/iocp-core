@@ -63,11 +63,25 @@ private:
 };
 
 //패킷 임시 구조체
-//[ PKT_S_TEST 고정사이즈 ][ 가변데이터 BuffListItem BuffListItem BuffListItem ...  ]
-struct PKT_S_TEST {
-	struct BuffsListItem {
+//[ PKT_S_TEST 고정사이즈 ][ 가변데이터 BuffListItem BuffListItem BuffListItem ...  ][victim victim][victim victim][victim victim]
+struct PKT_S_TEST 
+{
+	struct BuffsListItem 
+	{
 		uint64 buffId;
 		float remianTime;
+
+		uint16 victimOffset;
+		uint16 victimCount;
+		
+		//Size도 증가시켜준다.
+		bool Validate(BYTE* packetStart, uint16 packetSize, OUT uint32& size) {
+			if (victimOffset + victimCount * sizeof(uint64) > packetSize)
+				return false;
+
+			size += victimCount * sizeof(uint64);
+			return true;
+		}
 	};
 
 	uint16 packetSize; //공용 헤더 를 패킷에 포함 시켜서 전체 크기를 확인한다.
@@ -85,22 +99,40 @@ struct PKT_S_TEST {
 		if (packetSize < size)
 			return false;
 
-		size += buffsCount * sizeof(BuffsListItem); //가변 길이의 사이즈 계산
-		if (size != packetSize)	//PaketSize 테스트
-			return false;
-
 		if (buffsOffset + buffsCount + sizeof(BuffsListItem) > packetSize) //Offset 2차 테스트
 			return false;
+
+		//buffers 가변 데이터 크기 추가
+		size += buffsCount * sizeof(BuffsListItem); //가변 길이의 사이즈 계산
+		
+		BuffList buffList = GetBuffsList();
+		for (int32 i = 0; i < buffList.Count(); i++) {
+			if (buffList[i].Validate((BYTE*)this, packetSize, OUT size) == false)
+				return false;
+		}
+
+		//최종 크기 비교
+		if (size != packetSize)	
+			return false;
+
 		return true;
 	}
 
 	using BuffList = PacketList<PKT_S_TEST::BuffsListItem>;
+	using BuffVictimList = PacketList<uint64>;
 
 	BuffList GetBuffsList() 
 	{
 		BYTE* data = reinterpret_cast<BYTE*>(this);
 		data += buffsOffset;
 		return BuffList(reinterpret_cast<PKT_S_TEST::BuffsListItem*>(data), buffsCount);
+	}
+
+	BuffVictimList GetBuffVictimList(BuffsListItem* buffsItem) 
+	{
+		BYTE* data = reinterpret_cast<BYTE*>(this);
+		data += buffsItem->victimOffset;
+		return BuffVictimList(reinterpret_cast<uint64*>(data), buffsItem->victimCount);
 	}
 };
 #pragma pack()

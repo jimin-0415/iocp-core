@@ -43,17 +43,17 @@ void ClientPacketHandler::Handle_CTS_TEST(BYTE* buffer, int32 len)
 	PKT_S_TEST::BuffList buffs = pkt->GetBuffsList();
 
 	cout << "BuffCount " << buffs.Count() << endl;
-	for (int32 i = 0; i < buffs.Count(); i++) {
-		cout << "BuffInfo : " << buffs[i].buffId << "  RemainTime : " << buffs[i].remianTime << endl;
-	}
-	// begin end iterator
-	for (auto it = buffs.begin(); it != buffs.end(); ++it) {
-		cout << "BuffInfo : " << it->buffId << "  RemainTime : " << it->remianTime << endl;
-	}
-
+	
 	//range for 문법
 	for (auto buff : buffs) {
 		cout << "BuffInfo : " << buff.buffId << "  RemainTime : " << buff.remianTime << endl;
+
+		PKT_S_TEST::BuffVictimList list = pkt->GetBuffVictimList(&buff);
+
+		cout << "VictimeCount : " << list.Count() << endl;
+		for (auto victim : list) {
+			cout << "victim : " << victim << endl;
+		}
 	}
 
 

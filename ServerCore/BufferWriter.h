@@ -17,7 +17,7 @@ public:
 	bool Write(void* src, uint32 len);
 
 	template<typename T>
-	T*  Reserve();
+	T*  Reserve(uint16 count = 1); //예약 개수 설정 기본 1
 	
 	template<typename T>	//오른값 참조 -> 문제점 템플릿이 붙는 순간 보편 참조로 바뀌어버린다.
 	BufferWriter& operator<<(T&& src);
@@ -28,12 +28,12 @@ private:
 };
 
 template<typename T>
-T* BufferWriter::Reserve() {
-	if (FreeSize() < sizeof(T))
+T* BufferWriter::Reserve(uint16 count) {
+	if (FreeSize() < sizeof(T) * count)
 		return nullptr;
 
 	T* ret = reinterpret_cast<T*>(&_buffer[_pos]);
-	_pos += sizeof(T);
+	_pos += sizeof(T) * count;
 	return ret;
 }
 
