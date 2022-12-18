@@ -13,6 +13,8 @@
 #include "BufferWriter.h"
 #include "ServerPacketHandler.h"
 #include "tchar.h"
+#include "Protocol.pb.h"
+
 int main()
 {
     ServerServiceRef service = MakeShared<ServerService>(
@@ -39,35 +41,27 @@ int main()
     //공통 부분은 함수로 관리하자.
     while (true) {
 
-        //[PKT_S_TEST]
-        PKT_S_TEST_WRITE pktWriter(1001, 100, 10);
+        Protocol::S_TEST pkt;
+        pkt.set_id(1000);
+        pkt.set_hp(100);
+        pkt.set_attack(12);
 
-        //[PKT_S_TEST][BuffListItem BuffListItem BuffListItem]
-        PKT_S_TEST_WRITE::BuffList buffList = pktWriter.ReserveBuffList(3);
-        buffList[0] = { 100, 1.5f };
-        buffList[1] = { 200, 1234.f };
-        buffList[2] = { 300, 24.f };
-       
-        PKT_S_TEST_WRITE::BuffVictimsList pktvictimList0 = pktWriter.ReserveBuffsVictimsList(&buffList[0], 3);
+        //버프 사이즈
         {
-            pktvictimList0[0] = 1000;
-            pktvictimList0[1] = 1001;
-            pktvictimList0[2] = 1002;
+            Protocol::BuffData* data = pkt.add_buffs();
+            data->set_buffid(100);
+            data->set_remaintime(1.2f);
+            data->add_victims(4000);
         }
-
-        PKT_S_TEST_WRITE::BuffVictimsList pktvictimList1 = pktWriter.ReserveBuffsVictimsList(&buffList[1], 1);
         {
-            pktvictimList1[0] = 2000;
+            Protocol::BuffData* data = pkt.add_buffs();
+            data->set_buffid(200);
+            data->set_remaintime(2.5f);
+            data->add_victims(1000);
+            data->add_victims(2000);
         }
-
-        PKT_S_TEST_WRITE::BuffVictimsList pktvictimList2 = pktWriter.ReserveBuffsVictimsList(&buffList[2], 2);
-        {
-            pktvictimList2[0] = 3000;
-            pktvictimList2[1] = 3001;
-        }
-
-        SendBufferRef sendBuffer = pktWriter.CloseAndReturn();
-
+        
+        SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
         GSessionManager.BroadCast(sendBuffer);
 
         this_thread::sleep_for(200ms);
