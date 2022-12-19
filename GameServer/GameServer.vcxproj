@@ -109,7 +109,7 @@
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>CALL $(SolutionDir)Common\Protobuf\bin\GenPackets.bat</Command>
+      <Command>CALL $(SolutionDir)Common\Protobuf\bat\GenPackets.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -135,7 +135,7 @@
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>CALL $(SolutionDir)Common\Protobuf\bin\GenPackets.bat</Command>
+      <Command>CALL $(SolutionDir)Common\Protobuf\bat\GenPackets.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -157,7 +157,7 @@
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>CALL $(SolutionDir)Common\Protobuf\bin\GenPackets.bat</Command>
+      <Command>CALL $(SolutionDir)Common\Protobuf\bat\GenPackets.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,7 +183,7 @@
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>CALL $(SolutionDir)Common\Protobuf\bin\GenPackets.bat</Command>
+      <Command>CALL $(SolutionDir)Common\Protobuf\bat\GenPackets.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -226,10 +226,10 @@
     <ClInclude Include="Struct.pb.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\Protobuf\bin\Enum.proto" />
-    <None Include="..\Common\Protobuf\bin\GenPackets.bat" />
-    <None Include="..\Common\Protobuf\bin\Protocol.proto" />
-    <None Include="..\Common\Protobuf\bin\Struct.proto" />
+    <None Include="..\Common\Protobuf\bat\Enum.proto" />
+    <None Include="..\Common\Protobuf\bat\GenPackets.bat" />
+    <None Include="..\Common\Protobuf\bat\Protocol.proto" />
+    <None Include="..\Common\Protobuf\bat\Struct.proto" />
     <None Include="Study.md" />
   </ItemGroup>
   <ItemGroup>

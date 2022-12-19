@@ -62,16 +62,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Study.md" />
-    <None Include="..\Common\Protobuf\bin\GenPackets.bat">
+    <None Include="..\Common\Protobuf\bat\GenPackets.bat">
       <Filter>Protocol</Filter>
     </None>
-    <None Include="..\Common\Protobuf\bin\Enum.proto">
+    <None Include="..\Common\Protobuf\bat\Protocol.proto">
       <Filter>Protocol</Filter>
     </None>
-    <None Include="..\Common\Protobuf\bin\Protocol.proto">
+    <None Include="..\Common\Protobuf\bat\Struct.proto">
       <Filter>Protocol</Filter>
     </None>
-    <None Include="..\Common\Protobuf\bin\Struct.proto">
+    <None Include="..\Common\Protobuf\bat\Enum.proto">
       <Filter>Protocol</Filter>
     </None>
   </ItemGroup>
