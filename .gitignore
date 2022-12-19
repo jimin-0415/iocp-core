@@ -18,7 +18,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+
 
 # Fortran module files
 *.mod
@@ -28,7 +28,7 @@
 *.lai
 *.la
 *.a
-*.lib
+
 
 # Executables
 *.exe
@@ -55,9 +55,9 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
+
 [Dd]ebugPublic/
-[Rr]elease/
+
 [Rr]eleases/
 x64/
 x86/
@@ -113,7 +113,7 @@ StyleCopReport.xml
 *.ilk
 *.meta
 *.iobj
-*.pdb
+
 *.ipdb
 *.pgc
 *.pgd
