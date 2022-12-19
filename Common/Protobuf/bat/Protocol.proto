@@ -1,0 +1,20 @@
+syntax = "proto3";
+package Protocol;
+
+import "Enum.proto";
+import "Struct.proto";
+
+message S_TEST
+{
+	uint64 id = 1;
+	uint32 hp = 2;
+	uint32 attack = 3;
+	repeated BuffData buffs = 4;
+
+	//enum PacketId { NONE = 0; PACKET_ID = 1; }
+}
+
+message S_LOGIN
+{
+	//enum PacketId { NONE = 0; PACKET_ID = 1;}
+}
