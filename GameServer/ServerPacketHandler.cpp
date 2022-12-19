@@ -3,21 +3,19 @@
 #include "BufferReader.h"
 #include "BufferWriter.h"
 
-void ServerPacketHandler::HandlePacket(BYTE* buffer, int32 len)
-{
-	BufferReader br(buffer, len);
-	
-	PacketHeader header;
-	br.Peek(&header);
 
-	switch (header.id) {
-	defualt:
-		break;
-	}
+PacketHandlerFunc GPacketHandler[UINT16_MAX];
+//작업 코스
+
+bool Handle_Invalid(PacketSessionRef& session, BYTE* buffer, int32 len)
+{
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
+
+	cout << "WARN : " << header->id << endl;
+	return false;
 }
 
-SendBufferRef ServerPacketHandler::MakeSendBuffer(Protocol::S_TEST& pkt)
+bool Handle_S_Test(PacketSessionRef& session, Protocol::S_TEST& pkt)
 {
-	return _MakeSendBuffer(pkt, S_TEST);
+	return false;
 }
-
