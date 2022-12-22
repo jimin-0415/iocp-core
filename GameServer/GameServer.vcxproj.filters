@@ -61,7 +61,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Study.md" />
     <None Include="..\Common\Protobuf\bat\GenPackets.bat">
       <Filter>Protocol</Filter>
     </None>

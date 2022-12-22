@@ -230,7 +230,6 @@
     <None Include="..\Common\Protobuf\bat\GenPackets.bat" />
     <None Include="..\Common\Protobuf\bat\Protocol.proto" />
     <None Include="..\Common\Protobuf\bat\Struct.proto" />
-    <None Include="Study.md" />
   </ItemGroup>
   <ItemGroup>
     <UpToDateCheckInput Include="..\Common\Protobuf\bin\Enum.proto" />
